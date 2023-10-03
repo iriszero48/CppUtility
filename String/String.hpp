@@ -396,36 +396,6 @@ namespace CuStr
     __CombineImpl(std::wstring, CombineW);
 #pragma endregion Combine
 
-#pragma region FromStream
-
-    template <typename T, typename... Args>
-    void FromStreamTo(std::string &str, const T &toStream, Args &&...fmt)
-    {
-        std::ostringstream buf{};
-        (buf << ... << fmt) << toStream;
-        str.append(buf.str());
-    }
-
-    template <typename Ret, typename T, typename... Args>
-    [[nodiscard]] Ret FromStreamAs(const T &toStream, Args &&...fmt)
-    {
-        std::string buf{};
-        FromStreamTo(buf, toStream, std::forward<Args>(fmt)...);
-        if constexpr (std::is_same_v<Ret, std::string>)
-            return buf;
-        return _Detail::GetStrFunc<Ret>{}(buf);
-    }
-
-#define __FromStreamImpl(type, func)                                     \
-    template <typename T, typename... Args>                              \
-    [[nodiscard]] type func(const T &toStream, Args &&...fmt)            \
-    {                                                                    \
-        return FromStreamAs<type>(toStream, std::forward<Args>(fmt)...); \
-    }
-
-    __Suit2(__FromStreamImpl, FromStream);
-#pragma endregion FromStream
-
 #pragma region ToString
 
     template <typename Str, typename T>
@@ -516,6 +486,14 @@ namespace CuStr
                 break;
             i = p + 1;
         }
+    }
+
+    template <typename Str, typename SplitCh>
+    auto Split(const Str& str, const SplitCh& ch)
+    {
+        std::vector<std::basic_string<typename Str::value_type>> res{};
+        Split(str, ch, [&](const auto& v) { res.emplace_back(v); });
+        return res;
     }
 #pragma endregion Split
 
@@ -609,19 +587,9 @@ namespace CuStr
         return {reinterpret_cast<const char8_t *>(str.data()), str.length()};
     }
 
-    [[nodiscard]] inline std::string ToDirtyUtf8String(const std::u8string &str)
-    {
-        return {reinterpret_cast<const char *>(str.c_str()), str.length()};
-    }
-
     [[nodiscard]] inline std::string ToDirtyUtf8String(const std::u8string_view &str)
     {
         return {reinterpret_cast<const char *>(str.data()), str.length()};
-    }
-
-    [[nodiscard]] inline std::string_view ToDirtyUtf8StringView(const std::u8string &str)
-    {
-        return {reinterpret_cast<const char *>(str.c_str()), str.length()};
     }
 
     [[nodiscard]] inline std::string_view ToDirtyUtf8StringView(const std::u8string_view &str)

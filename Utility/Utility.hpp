@@ -16,6 +16,49 @@
 
 namespace CuUtil
 {
+	template <typename T>
+	class Range
+	{
+		T begVal = 0;
+		T endVal;
+
+	public:
+		class Iterator
+		{
+			T val;
+
+		public:
+			using iterator_category = std::random_access_iterator_tag;
+			using value_type = T;
+			using difference_type = std::int64_t;
+			using pointer = const T*;
+			using reference = const T&;
+
+			Iterator() : val(0) {}
+			Iterator(T val) : val(val) {}
+
+			Iterator& operator++()
+			{
+				++val;
+				return *this;
+			}
+
+			bool operator==(Iterator other) const { return val == other.val; }
+			bool operator!=(Iterator other) const { return !(*this == other); }
+			bool operator<(Iterator other) const { return val < other.val; }
+
+			reference operator*() const { return val; }
+			value_type operator+(Iterator other) const { return val + other.val; }
+			difference_type operator-(Iterator other) const { return val - other.val; }
+		};
+
+		Range(T count) : endVal(count) {}
+		Range(T start, T count) : begVal(start), endVal(start + count) {}
+
+		Iterator begin() { return Iterator(begVal); }
+		Iterator end() { return Iterator(endVal); }
+	};
+
 	namespace Variant
 	{
 		template <typename... Func>
@@ -303,7 +346,7 @@ namespace CuUtil
 	}
 
 	template <typename T, typename... Types>
-	inline constexpr bool IsAnyOf = std::disjunction_v<std::is_same<T, Types>...>;
+	inline constexpr bool IsAnyOfV = std::disjunction_v<std::is_same<T, Types>...>;
 
 	template <typename T, std::enable_if_t<std::is_enum_v<T>, bool> = true>
 	std::underlying_type_t<T> ToUnderlying(T v)
@@ -311,9 +354,17 @@ namespace CuUtil
 		return static_cast<std::underlying_type_t<T>>(v);
 	}
 
+	template <typename Ret, typename It>
+	Ret CopyN(It&& begin, const size_t n)
+	{
+		Ret ret{};
+		std::copy_n(begin, n, std::begin(ret));
+		return ret;
+	}
+
 	namespace Convert
 	{
-		template <typename T, typename Ct, size_t Cs, std::enable_if_t<IsAnyOf<T, uint8_t, uint16_t, uint32_t, uint64_t>, bool> = true>
+		template <typename T, typename Ct, size_t Cs, std::enable_if_t<IsAnyOfV<T, uint8_t, uint16_t, uint32_t, uint64_t>, bool> = true>
 		constexpr T ToIntegral(const std::array<Ct, Cs> &str, size_t begin, const size_t end, const int base = 10)
 		{
 			const auto len = end - begin;
@@ -356,7 +407,7 @@ namespace CuUtil
 			return -1;
 		}
 
-		template <typename T, typename Ct, size_t Cs, std::enable_if_t<IsAnyOf<T, int8_t, int16_t, int32_t, int64_t>, bool> = true>
+		template <typename T, typename Ct, size_t Cs, std::enable_if_t<IsAnyOfV<T, int8_t, int16_t, int32_t, int64_t>, bool> = true>
 		constexpr T ToIntegral(const std::array<Ct, Cs> &str, size_t begin, const size_t end, const int base = 10)
 		{
 			const auto len = end - begin;

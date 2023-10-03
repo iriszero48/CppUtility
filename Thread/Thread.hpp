@@ -20,7 +20,7 @@ namespace CuThread
         std::mutex Mtx{};
         Func F;
 
-        explicit Synchronize(const Func &func) : F(func) {}
+        explicit Synchronize(Func func) : F(std::move(func)) {}
 
         template <typename... Args>
         decltype(auto) operator()(Args &&...args)

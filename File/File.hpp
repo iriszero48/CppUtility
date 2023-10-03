@@ -3,6 +3,7 @@
 #include <string>
 #include <filesystem>
 #include <fstream>
+#include <span>
 
 namespace CuFile
 {
@@ -99,15 +100,21 @@ namespace CuFile
         return ret;
     }
 
-    inline void WriteAllBytes(const std::filesystem::path &path, const uint8_t *data, const size_t size)
+    inline void WriteAllBytes(const std::filesystem::path& path, const uint8_t* data, const size_t size)
     {
         std::ofstream fs(path, std::ios::out | std::ios::binary);
         if (!fs)
             throw std::runtime_error("[File::WriteAllBytes] open file failed");
 
-        fs.write(reinterpret_cast<const char *>(data), size);
+    	fs.write(reinterpret_cast<const char*>(data), static_cast<std::streamsize>(size));
 
         fs.close();
+    }
+
+    template <size_t S>
+    inline void WriteAllBytes(const std::filesystem::path& path, const std::span<uint8_t, S>& data)
+    {
+        WriteAllBytes(path, data.data(), data.size_bytes());
     }
 
     inline void WriteAllText(const std::filesystem::path &path, const std::string_view &text)
