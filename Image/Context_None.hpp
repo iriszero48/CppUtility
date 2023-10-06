@@ -65,7 +65,7 @@ namespace CuImg
 
         static void Create(const size_t, const size_t)
         {
-            throw CuImg_StdException("disabled");
+            throw CuImg_StdException(u8"disabled");
         }
 
         [[nodiscard]] const DataType *Data() const { return this->RefData; }
@@ -101,11 +101,11 @@ namespace CuImg
 
         static void Create(const size_t, const size_t)
         {
-            throw CuImg_StdException("disabled");
+            throw CuImg_StdException(u8"disabled");
         }
 
         [[nodiscard]] PointerType Data() const { return this->RefData; }
-        [[nodiscard]] DataType *Data() { throw CuImg_StdException("disabled"); }
+        [[nodiscard]] DataType *Data() { throw CuImg_StdException(u8"disabled"); }
         [[nodiscard]] size_t Width() const { return this->RefWidth; }
         [[nodiscard]] size_t Height() const { return this->RefHeight; }
         [[nodiscard]] size_t Size() const { return Linesize() * Height(); }

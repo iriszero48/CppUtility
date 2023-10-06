@@ -268,7 +268,7 @@ namespace CuVid
 
             inline int AvWriteTrailer(AVFormatContext *s)
             {
-                FF_API_LESS_0(AvWriteTrailer, s);
+                FF_API_LESS_0(av_write_trailer, s);
             }
 
             inline int AvcodecSendFrame(AVCodecContext *avctx, const AVFrame *frame)
@@ -801,6 +801,9 @@ namespace CuVid
                 AV::AvcodecSendPacket(Ctx.currentCodecCtx, Ctx.FileEof ? nullptr : Ctx.pkt);
                 return true;
             }
+
+            av_packet_unref(Ctx.pkt);
+
             return false;
         }
 
@@ -825,6 +828,7 @@ namespace CuVid
                     if (ret == AVERROR_EOF)
                     {
                         Ctx.Eof = true;
+                        av_packet_unref(Ctx.pkt);
                         return StreamTypeNone;
                     }
                     if (ret == AVERROR(EAGAIN))
