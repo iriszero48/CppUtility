@@ -122,7 +122,7 @@ namespace CuImg
 
         void Create(const size_t width, const size_t height)
         {
-            CuUtil_Assert(width <= std::numeric_limits<int>::max() && height <= std::numeric_limits<int>::max(), WxImageException);
+            CuAssert(width <= std::numeric_limits<int>::max() && height <= std::numeric_limits<int>::max());
 
             Img = {};
             Img.Create(static_cast<int>(width), static_cast<int>(height));
@@ -149,7 +149,7 @@ namespace CuImg
 
         [[nodiscard]] CuRGBA At(const size_t row, const size_t col) const
         {
-            CuUtil_Assert(row < Height() && col < Width(), WxImageException);
+            CuAssert(row < Height() && col < Width());
 
             const auto *rgb = Img.GetData() + row * Width() * 3 * 1 + col * 3 * 1;
             return {
@@ -161,7 +161,7 @@ namespace CuImg
 
         decltype(auto) Set(const size_t row, const size_t col, const CuRGBA &pix)
         {
-            CuUtil_Assert(row < Height() && col < Width(), WxImageException);
+            CuAssert(row < Height() && col < Width());
 
             auto *rgb = Img.GetData() + row * Width() * 3 * 1 + col * 3 * 1;
             auto *a = Img.GetAlpha() + row * Width() * 1 * 1 + col * 1 * 1;

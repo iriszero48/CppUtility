@@ -17,7 +17,8 @@ namespace CuImg::Detail::QT
         reader.setFileName(QString::fromUtf8(path.u8string().c_str()));
         if (!reader.read(&ctx.Img))
         {
-            throw CuImg_QtException("[QImageReader::read] ", reader.errorString().toStdString());
+            const auto err = reader.errorString().toUtf8();
+            throw CuImg_QtException(u8"[QImageReader::read] ", std::u8string_view(reinterpret_cast<const char8_t*>(err.data()), err.size()));
         }
 
         if (auto &i = ctx.Img; i.format() != F)
@@ -34,7 +35,8 @@ namespace CuImg::Detail::QT
         writer.setFileName(QString::fromUtf8(path.u8string().c_str()));
         if (!writer.write(img.GetContext().Img))
         {
-            throw CuImg_QtException("[QImageWriter::write] ", writer.errorString().toStdString());
+            const auto err = writer.errorString().toUtf8();
+            throw CuImg_QtException(u8"[QImageWriter::write] ", std::u8string_view(reinterpret_cast<const char8_t*>(err.data()), err.size()));
         }
     }
 }

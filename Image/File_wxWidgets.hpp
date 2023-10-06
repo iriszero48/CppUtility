@@ -8,7 +8,7 @@ namespace CuImg::Detail::WxWidgets
     {
         const auto u8P = path.u8string();
         if (!img.GetContext().Raw().LoadFile(wxString::FromUTF8(reinterpret_cast<const char *>(u8P.c_str()), u8P.length())))
-            throw CuImg_WxImageException("[wxImage::LoadFile] return false");
+            throw CuImg_WxImageException(u8"[wxImage::LoadFile] return false");
         if (!img.GetContext().Raw().HasAlpha())
             img.GetContext().Raw().InitAlpha();
     }
@@ -17,6 +17,6 @@ namespace CuImg::Detail::WxWidgets
     {
         const auto u8P = path.u8string();
         if (!img.GetContext().Raw().SaveFile(wxString::FromUTF8(reinterpret_cast<const char *>(u8P.c_str()), u8P.length())))
-            throw CuImg_WxImageException("[wxImage::SaveFile] return false");
+            throw CuImg_WxImageException(u8"[wxImage::SaveFile] return false");
     }
 }
