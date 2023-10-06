@@ -15,9 +15,17 @@
 
 #include "../Enum/Enum.hpp"
 #include "../String/String.hpp"
+#include "../Assert/Assert.hpp"
 
 namespace CuImg
 {
+    enum class DirectXTexLang : DWORD { Default = 0, EN_US = 0x0409 };
+
+	static struct 
+	{
+        DirectXTexLang LangId = DirectXTexLang::Default;
+	} DirectXTexConfig;
+
     namespace Detail::DxTex
     {
 #pragma region WicPhotoProp
@@ -109,60 +117,58 @@ namespace CuImg
                     WhiteBalanceText);
 #pragma endregion WicPhotoProp
 
-        inline std::string ToString(const std::wstring &err)
+	    inline std::u8string ErrStr(const HRESULT hr)
+	    {
+		    std::wstring err = CuStr::CombineW("Error 0x", std::hex, static_cast<uint32_t>(hr), ": ");
+
+		    LPTSTR errorText = nullptr;
+
+		    FormatMessage(
+			    FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS,
+			    nullptr,
+			    hr,
+			    CuUtil::ToUnderlying(DirectXTexConfig.LangId),
+			    reinterpret_cast<LPTSTR>(&errorText),
+			    0,
+			    nullptr);
+
+		    if (nullptr != errorText)
+		    {
+			    err.append(errorText);
+
+			    LocalFree(errorText);
+
+			    return CuStr::ToU8String(err);
+		    }
+
+            return CuStr::FormatU8("{}unknown error(FormatMessage got an error: 0x{})", err,
+                CuStr::Combine(std::hex, std::setw(8), std::setfill('0'), GetLastError()));
+	    }
+
+        template <size_t S>
+        constexpr std::array<char8_t, S> GetFunctionName(const std::array<char, S>& str)
         {
-            try
+            size_t pos = 0;
+            for (; pos < S - 1; ++pos)
             {
-                return std::filesystem::path(err).string();
-            }
-            catch (...)
-            {
-                return CuStr::ToDirtyUtf8String(CuStr::ToUtf8(err));
-            }
-        }
-
-        inline std::string ErrStr(const HRESULT hr)
-        {
-            std::wstring err = CuStr::CombineW("Error 0x", std::hex, static_cast<uint32_t>(hr), ": ");
-
-            LPTSTR errorText = nullptr;
-
-            FormatMessage(
-                FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS,
-                nullptr,
-                hr,
-                0x0409,
-                reinterpret_cast<LPTSTR>(&errorText),
-                0,
-                nullptr);
-
-            if (nullptr != errorText)
-            {
-                err.append(errorText);
-
-                LocalFree(errorText);
-
-                return ToString(err);
+                if (str[pos] == '(') break;
             }
 
-            return CuStr::Combine(ToString(err), "unknown error(FormatMessage got an error: 0x", std::hex, GetLastError(), ")");
-        }
+            std::array<char8_t, S> buf{};
+            for (size_t i = 0; i < pos; ++i)
+            {
+                buf[i] = static_cast<char8_t>(str[i]);
+            }
+            buf[pos] = 0;
 
-        template <typename T, size_t S>
-        constexpr std::string_view GetFunctionName(const T (&str)[S])
-        {
-            for (size_t i = 0; i < S; ++i)
-                if (str[i] == '(')
-                    return std::string_view(str, i);
-            return str;
+            return buf;
         }
 
         namespace Api
         {
 #define CuImg__DxTex_WIN_API(expr)              \
-    constexpr auto fn = GetFunctionName(#expr); \
     if (const auto hr = expr; FAILED(hr))       \
-    throw CuImg_DirectXTexException("[", fn, "] ", ErrStr(hr))
+    throw CuImg_DirectXTexException(std::u8string_view(GetFunctionName(CuUtil::String::ToBuffer(#expr)).data()), u8": ", ErrStr(hr))
 
             inline void CoInitializeEx(LPVOID pvReserved, DWORD dwCoInit)
             {
@@ -319,7 +325,7 @@ namespace CuImg
         void Create(const size_t width, const size_t height)
         {
             if (const auto hr = Image.Initialize2D(DXGI_FORMAT_R8G8B8A8_UNORM, width, height, 1, 1); FAILED(hr))
-                throw CuImg_DirectXTexException("[ScratchImage::Initialize2D] ", Detail::DxTex::ErrStr(hr));
+                throw CuImg_DirectXTexException(u8"[ScratchImage::Initialize2D] ", Detail::DxTex::ErrStr(hr));
         }
 
         [[nodiscard]] const uint8_t *Data() const { return GetImage()->pixels; }

@@ -474,14 +474,14 @@ namespace CuStr
     template <typename Str, typename SplitCh, typename Func>
     void Split(const Str &str, const SplitCh &ch, Func &&func)
     {
-        const auto len = str.length();
+        const auto len = str.size();
         for (size_t i = 0; i < len && i != str.npos;)
         {
             const auto p = str.find(ch, i);
             auto end = p;
             if (end == str.npos)
                 end = len;
-            func(std::basic_string_view(str.data() + i, end - i));
+            func(std::basic_string_view<typename Str::value_type>(str.data() + i, end - i));
             if (p == str.npos)
                 break;
             i = p + 1;

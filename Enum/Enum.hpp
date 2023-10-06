@@ -92,8 +92,7 @@ namespace CuEnum
         const auto v = FromString<T>(str);
         if (!v)
         {
-            throw CuExcept_MakeStaticException(Exception,
-                                               "value is not one of the named constants defined for the enumeration");
+            throw Exception("value is not one of the named constants defined for the enumeration");
         }
 
         return *v;

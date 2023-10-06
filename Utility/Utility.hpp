@@ -469,11 +469,6 @@ namespace CuUtil
 #define CuUtil_Filename CuUtil_GetFilename(__FILE__)
 	}
 
-#define CuUtil_AssertWhat(expr, ex, what) \
-	if (!(expr))                          \
-	throw ex(what)
-#define CuUtil_Assert(expr, ex) CuUtil_AssertWhat(expr, ex, (CuUtil::String::Combine("[", CuUtil_Filename, ":", CuUtil_LineString, "] [", __FUNCTION__, "] CuUtil_Assert(" #expr ") failed.").data()))
-
 #if defined(DEBUG) || defined(_DEBUG)
 #define CuUtil_Assert_DebugOnly(expr, ex) CuUtil_Assert(expr, ex)
 #else

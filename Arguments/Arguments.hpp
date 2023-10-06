@@ -20,17 +20,22 @@
 
 namespace CuArgs
 {
-    class Exception : public std::runtime_error
-    {
-    public:
-        using std::runtime_error::runtime_error;
-    };
+    CuExcept_MakeException(Exception, CuExcept, Exception);
+    // class Exception : public CuExcept::Exception
+    // {
+    // public:
+	//     using T = CuExcept::Exception::ValueType;
+    // 
+	//     Exception(T message, T exceptionName = ToTString("Exception"),
+	//               std::source_location source = std::source_location::current(),
+	//               StacktraceType stackTrace = boost::stacktrace::stacktrace(), std::any innerException = {},
+	//               std::any data = {}) : CuExcept::Exception(message, exceptionName, source, stackTrace, innerException,
+	//                                                         data)
+	//     {
+	//     }
+    // };
 
-    class ConvertException : public Exception
-    {
-    public:
-        using Exception::Exception;
-    };
+    CuExcept_MakeException(ConvertException, CuArgs, Exception);
 
     using ArgLengthType = int;
 
@@ -114,18 +119,19 @@ namespace CuArgs
 
         void Set(const SetValueType &value) override
         {
-            try
-            {
-                auto raw = convert(std::get<ConvertFuncParamInlineType>(value));
-                if (!Validate(raw))
-                    throw CuExcept_MakeException(ConvertException, "Validate failed");
+	        try
+	        {
+		        auto raw = convert(std::get<ConvertFuncParamInlineType>(value));
+		        if (!Validate(raw))
+			        throw ConvertException("Validate failed");
 
-                val = std::move(raw);
-            }
-            catch (...)
-            {
-                std::rethrow_if_nested(CuExcept_MakeException(ConvertException, "convert failed"));
-            }
+		        val = std::move(raw);
+	        }
+	        catch (const std::exception& ex)
+	        {
+		        throw ConvertException("convert failed", CuExcept::GetExceptionName<ConvertException>{}(),
+		                               std::source_location::current(), CuExcept_GetStackTrace, ex);
+	        }
         }
 
         [[nodiscard]] std::any Get() const override
@@ -175,7 +181,7 @@ namespace CuArgs
             }
             catch (const std::exception &ex)
             {
-                throw CuExcept_MakeException(Exception, ex.what(), R"(: invalid literal: ")", value, R"(")");
+                throw Exception(CuStr::Appends(ex.what(), R"(: invalid literal: ")", value, R"(")"));
             }
         }
 
@@ -239,7 +245,7 @@ namespace CuArgs
             }
             catch (const std::exception &ex)
             {
-                throw CuExcept_MakeException(Exception, ex.what(), R"(: invalid literal: ")", value, R"(")");
+                throw Exception(CuStr::Appends(ex.what(), R"(: invalid literal: ")", value, R"(")"));
             }
         }
 
@@ -313,7 +319,7 @@ namespace CuArgs
             };
 
             if (argc == 1 && reqCheck() != args.end())
-                throw CuExcept_MakeException(Exception, "at least one option must be specified");
+                throw Exception("at least one option must be specified");
 
             for (auto i = 1; i < argc; ++i)
             {
@@ -350,16 +356,16 @@ namespace CuArgs
                     }
                     else
                     {
-                        throw CuExcept_MakeException(Exception, "missing argument for option: ", argv[i]);
+                        throw Exception(CuStr::Appends("missing argument for option: ", argv[i]));
                     }
                 }
                 else
                 {
-                    throw CuExcept_MakeException(Exception, "unrecognized option: ", argv[i]);
+                    throw Exception(CuStr::Appends("unrecognized option: ", argv[i]));
                 }
             }
             if (const auto p = reqCheck(); p != args.end())
-                throw CuExcept_MakeException(Exception, "missing option: ", p->second->GetName());
+                throw Exception(CuStr::Appends("missing option: ", p->second->GetName()));
         }
 
     private:
@@ -368,7 +374,7 @@ namespace CuArgs
         {
             if (args.find(arg.GetName()) != args.end())
             {
-                throw CuExcept_MakeException(Exception, "\"", args.at(arg.GetName())->GetName(), "\" existed");
+                throw Exception(CuStr::Appends("\"", args.at(arg.GetName())->GetName(), "\" existed"));
             }
             args[arg.GetName()] = &arg;
         }
@@ -453,7 +459,7 @@ namespace CuArgs
             }
             catch (const std::exception &e)
             {
-                throw CuExcept_MakeException(Exception, "[arg:", args.at(arg.GetName())->GetName(), "] ", e.what());
+                throw Exception(CuStr::Appends("[arg:", args.at(arg.GetName())->GetName(), "] ", e.what()));
             }
         }
 

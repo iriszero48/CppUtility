@@ -17,7 +17,7 @@ namespace CuCrypto::Detail
 				char res[4]{ '0', 0, 0, 0 };
 				if (const auto [p, e] = std::to_chars(res + 1, res + 3, value, 16);
 					e != std::errc{})
-					throw CuCrypto_MakeExcept("convert error");
+					throw Exception("convert error");
 				hex.append(res[2] == 0 ? std::string_view(res, 2) : std::string_view(res + 1, 2));
 			}
 		}

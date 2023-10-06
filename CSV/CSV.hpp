@@ -3,13 +3,11 @@
 #include <fstream>
 
 #include "Exception/Except.hpp"
+#include "File/File.hpp"
 
 namespace CuCSV
 {
-	class Exception : public std::exception
-	{
-		using std::exception::exception;
-	};
+	CuExcept_MakeException(Exception, CuExcept, Exception);
 
 	struct Setting
 	{
@@ -53,8 +51,7 @@ namespace CuCSV
 			auto flag = std::ios::out;
 			if (append) flag |= std::ios::app;
 
-			fs.open(path, flag);
-			if (!fs) throw CuExcept_MakeStaticException(Exception, "[std::ofstream::operator!] open file failed");
+			fs = CuFile::OpenForWrite(path, flag);
 
 			if (startNewRow) EndRow();
 		}

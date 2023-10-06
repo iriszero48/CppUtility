@@ -5,16 +5,39 @@
 #include <fstream>
 #include <span>
 
+#include "../Exception/Except.hpp"
+
 namespace CuFile
 {
+    CuExcept_MakeException(Exception, CuExcept, Exception);
+
+    inline std::ofstream OpenForWrite(const std::filesystem::path& path, const int flags = std::ios::out)
+    {
+        std::ofstream fs(path, flags);
+        if (!fs) throw Exception("open file failed");
+        return fs;
+    }
+
+    inline std::ifstream OpenForRead(const std::filesystem::path& path, const int flags = std::ios::in)
+    {
+        std::ifstream fs(path, flags);
+        if (!fs) throw Exception("open file failed");
+        return fs;
+    }
+
+    inline std::fstream Open(const std::filesystem::path& path, const int flags = std::ios::in | std::ios::out)
+    {
+        std::fstream fs(path, flags);
+        if (!fs) throw Exception("open file failed");
+        return fs;
+    }
+
     // alloc by new
     inline void ReadAllBytesAsPtr(const std::filesystem::path &path, uint8_t **ptr, size_t &size)
     {
-        std::ifstream fs(path, std::ios::in | std::ios::binary);
-        if (!fs)
-            throw std::runtime_error("[File::ReadAllBytesAsPtr] open file failed");
+	    auto fs = OpenForRead(path, std::ios::in | std::ios::binary);
 
-        fs.seekg(0, std::ios::end);
+	    fs.seekg(0, std::ios::end);
         size = fs.tellg();
         fs.seekg(0, std::ios::beg);
 
@@ -34,9 +57,7 @@ namespace CuFile
 
     inline void ReadAllBytes(std::vector<uint8_t> &data, const std::filesystem::path &path)
     {
-        std::ifstream fs(path, std::ios::in | std::ios::binary);
-        if (!fs)
-            throw std::runtime_error("[File::ReadAllBytes] open file failed");
+        auto fs = OpenForRead(path, std::ios::in | std::ios::binary);
 
         fs.seekg(0, std::ios::end);
         const auto size = fs.tellg();
@@ -58,9 +79,7 @@ namespace CuFile
 
     inline void ReadAllText(std::string &text, const std::filesystem::path &path)
     {
-        std::ifstream fs(path, std::ios::in);
-        if (!fs)
-            throw std::runtime_error("[File::ReadAllText] open file failed");
+        auto fs = OpenForRead(path, std::ios::in);
 
         fs.seekg(0, std::ios::end);
         const auto size = fs.tellg();
@@ -82,9 +101,7 @@ namespace CuFile
 
     inline void ReadAllLines(std::vector<std::string> &lines, const std::filesystem::path &path)
     {
-        std::ifstream fs(path, std::ios::in);
-        if (!fs)
-            throw std::runtime_error("[File::ReadAllLines] open file fail");
+        auto fs = OpenForRead(path, std::ios::in);
 
         std::string line{};
         while (std::getline(fs, line))
@@ -102,9 +119,7 @@ namespace CuFile
 
     inline void WriteAllBytes(const std::filesystem::path& path, const uint8_t* data, const size_t size)
     {
-        std::ofstream fs(path, std::ios::out | std::ios::binary);
-        if (!fs)
-            throw std::runtime_error("[File::WriteAllBytes] open file failed");
+        auto fs = OpenForWrite(path, std::ios::out | std::ios::binary);
 
     	fs.write(reinterpret_cast<const char*>(data), static_cast<std::streamsize>(size));
 
@@ -119,9 +134,7 @@ namespace CuFile
 
     inline void WriteAllText(const std::filesystem::path &path, const std::string_view &text)
     {
-        std::ofstream fs(path, std::ios::out);
-        if (!fs)
-            throw std::runtime_error("[File::WriteAllText] open file failed");
+        auto fs = OpenForWrite(path, std::ios::out);
 
         fs << text;
 
@@ -131,9 +144,7 @@ namespace CuFile
     template <typename It>
     void WriteAllLines(const std::filesystem::path &path, It begin, It end)
     {
-        std::ofstream fs(path, std::ios::out);
-        if (!fs)
-            throw std::runtime_error("[File::WriteAllLines] open file failed");
+        auto fs = OpenForWrite(path, std::ios::out);
 
         for (auto it = begin; it != end; ++it)
         {

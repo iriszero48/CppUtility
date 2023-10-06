@@ -36,7 +36,7 @@ namespace CuImg::Detail::OCV
         }
         if (buf.data == nullptr)
         {
-            throw CuImg_OpenCvException("the image cannot be read(because of missing file, improper permissions, unsupported or invalid format)");
+            throw CuImg_OpenCvException(u8"the image cannot be read(because of missing file, improper permissions, unsupported or invalid format)");
         }
 
         if ((buf.type() & CV_MAT_DEPTH_MASK) != CV_8U)
@@ -75,7 +75,7 @@ namespace CuImg::Detail::OCV
             }
         }
         if (!code)
-            throw CuImg_OpenCvException("unknown color");
+            throw CuImg_OpenCvException(u8"unknown color");
         cv::cvtColor(buf, ctx.Image, *code);
 
         img.GetContext() = std::move(ctx);
@@ -121,7 +121,7 @@ namespace CuImg::Detail::OCV
         {
             if (!imwrite(*pathBuf, *ptr, params))
             {
-                throw CuImg_OpenCvException("the image cannot be save");
+                throw CuImg_OpenCvException(u8"the image cannot be save");
             }
         }
         else
@@ -133,12 +133,12 @@ namespace CuImg::Detail::OCV
             }
             catch (...)
             {
-                std::rethrow_if_nested(CuImg_OpenCvException("unknown extension"));
+                std::rethrow_if_nested(CuImg_OpenCvException(u8"unknown extension"));
             }
             std::vector<uint8_t> data{};
             if (!imencode(ext, *ptr, data, params))
             {
-                throw CuImg_OpenCvException("the image cannot be save");
+                throw CuImg_OpenCvException(u8"the image cannot be save");
             }
             CuFile::WriteAllBytes(path, data.data(), data.size());
         }

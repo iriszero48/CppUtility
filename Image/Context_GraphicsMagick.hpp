@@ -159,7 +159,7 @@ namespace CuImg
 
         void Create(const size_t width, const size_t height)
         {
-            CuUtil_Assert(width < std::numeric_limits<int>::max() && height < std::numeric_limits<int>::max(), GraphicsMagickException);
+            CuAssert(width < std::numeric_limits<int>::max() && height < std::numeric_limits<int>::max());
             Img = Magick::Image(Magick::Geometry(static_cast<int>(width), static_cast<int>(height)), {});
         }
 
@@ -183,7 +183,7 @@ namespace CuImg
 
         [[nodiscard]] CuRGBOpacity16 At(const size_t row, const size_t col) const
         {
-            CuUtil_Assert(col < std::min<size_t>(Width(), std::numeric_limits<int>::max()) && row < std::min<size_t>(Height(), std::numeric_limits<int>::max()), GraphicsMagickException);
+            CuAssert(col < std::min<size_t>(Width(), std::numeric_limits<int>::max()) && row < std::min<size_t>(Height(), std::numeric_limits<int>::max()));
 
             const auto *pix = GetPixels().get(static_cast<int>(col), static_cast<int>(row), 1, 1);
             return {
@@ -195,7 +195,7 @@ namespace CuImg
 
         GraphicsMagickContext &Set(const size_t row, const size_t col, const CuRGBOpacity16 &pixel)
         {
-            CuUtil_Assert(col < std::min<size_t>(Width(), std::numeric_limits<int>::max()) && row < std::min<size_t>(Height(), std::numeric_limits<int>::max()), GraphicsMagickException);
+            CuAssert(col < std::min<size_t>(Width(), std::numeric_limits<int>::max()) && row < std::min<size_t>(Height(), std::numeric_limits<int>::max()));
 
             auto pixels = GetPixels();
             auto *pix = pixels.get(static_cast<int>(col), static_cast<int>(row), 1, 1);

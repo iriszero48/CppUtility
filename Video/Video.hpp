@@ -32,13 +32,9 @@ extern "C"
 
 namespace CuVid
 {
-    class Exception : public std::runtime_error
-    {
-    public:
-        using std::runtime_error::runtime_error;
-    };
+    CuExcept_MakeException(Exception, CuExcept, U8Exception);
     
-#define Except(...) CuExcept_MakeException(Exception, CuStr::Format(__VA_ARGS__))
+#define Except(...) Exception(CuStr::FormatU8(__VA_ARGS__))
 #define ThrowEx(...) throw Except(__VA_ARGS__)
 
     namespace Detail

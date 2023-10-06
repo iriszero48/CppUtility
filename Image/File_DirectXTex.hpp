@@ -138,7 +138,7 @@ namespace CuImg::Detail::DxTex
 					clear();
 					if (hr != WINCODEC_ERR_PROPERTYNOTFOUND && hr != WINCODEC_ERR_PROPERTYNOTSUPPORTED)
 						OutputDebugString(std::filesystem::path(CuStr::Combine(
-																	CuImg_DirectXTexException("[IWICMetadataQueryReader::GetMetadataByName] ", ErrStr(hr)).what()))
+																	CuImg_DirectXTexException(u8"[IWICMetadataQueryReader::GetMetadataByName] ", ErrStr(hr)).what()))
 											  .native()
 											  .c_str());
 					continue;
@@ -154,7 +154,7 @@ namespace CuImg::Detail::DxTex
 		DirectXTexContext::InfoType v;                                                   \
 		hr = PropVariantTo##WinType(value, &v);                                          \
 		if (FAILED(hr))                                                                  \
-			throw CuImg_DirectXTexException("[PropVariantTo" #WinType "] ", ErrStr(hr)); \
+			throw CuImg_DirectXTexException(u8"[PropVariantTo" #WinType "] ", ErrStr(hr)); \
 		val.emplace<DirectXTexContext::InfoType>(v);                                     \
 	}
 
@@ -191,7 +191,7 @@ namespace CuImg::Detail::DxTex
 					BOOL v;
 					hr = PropVariantToBoolean(value, &v);
 					if (FAILED(hr))
-						throw CuImg_DirectXTexException("[PropVariantToBoolean] ", ErrStr(hr));
+						throw CuImg_DirectXTexException(u8"[PropVariantToBoolean] ", ErrStr(hr));
 					val.emplace<DirectXTexContext::VtBool>(v);
 				}
 				break;
@@ -210,7 +210,7 @@ namespace CuImg::Detail::DxTex
 					PWSTR pszValue;
 					hr = PropVariantGetStringElem(value, 0, &pszValue);
 					if (FAILED(hr))
-						throw CuImg_DirectXTexException("[PropVariantGetStringElem] ", ErrStr(hr));
+						throw CuImg_DirectXTexException(u8"[PropVariantGetStringElem] ", ErrStr(hr));
 					val.emplace<DirectXTexContext::VtWStr>(pszValue);
 					CoTaskMemFree(pszValue);
 				}
@@ -228,7 +228,7 @@ namespace CuImg::Detail::DxTex
 						PWSTR pszValue;
 						hr = PropVariantGetStringElem(value, iElem, &pszValue);
 						if (FAILED(hr))
-							throw CuImg_DirectXTexException("[PropVariantGetStringElem] ", ErrStr(hr));
+							throw CuImg_DirectXTexException(u8"[PropVariantGetStringElem] ", ErrStr(hr));
 
 						buf.emplace_back(pszValue);
 						CoTaskMemFree(pszValue);
@@ -243,7 +243,7 @@ namespace CuImg::Detail::DxTex
 					FILETIME ftModified;
 					hr = PropVariantToFileTime(value, PSTF_LOCAL, &ftModified);
 					if (FAILED(hr))
-						throw CuImg_DirectXTexException("[PropVariantToFileTime] ", ErrStr(hr));
+						throw CuImg_DirectXTexException(u8"[PropVariantToFileTime] ", ErrStr(hr));
 
 					val.emplace<DirectXTexContext::VtTime>(std::chrono::file_clock::duration(
 						static_cast<int64_t>(ftModified.dwHighDateTime) << 32 | ftModified.dwLowDateTime));
@@ -255,10 +255,10 @@ namespace CuImg::Detail::DxTex
 				{
 					const auto cElem = PropVariantGetElementCount(value);
 					DirectXTexContext::VtUi1Array buf(cElem);
-					CuUtil_Assert(buf.size() < UINT_MAX, DirectXTexException);
+					CuAssert(buf.size() < UINT_MAX);
 					hr = PropVariantToBuffer(value, buf.data(), static_cast<UINT>(buf.size()));
 					if (FAILED(hr))
-						throw CuImg_DirectXTexException("[PropVariantToBuffer] ", ErrStr(hr));
+						throw CuImg_DirectXTexException(u8"[PropVariantToBuffer] ", ErrStr(hr));
 					val.emplace<DirectXTexContext::VtUi1Array>(std::move(buf));
 				}
 				break;
@@ -291,7 +291,7 @@ namespace CuImg::Detail::DxTex
 			}
 
 			if (const auto hr = clear(); FAILED(hr))
-				throw CuImg_DirectXTexException("[PropVariantClear] ", ErrStr(hr));
+				throw CuImg_DirectXTexException(u8"[PropVariantClear] ", ErrStr(hr));
 		}
 	}
 
@@ -340,7 +340,7 @@ namespace CuImg::Detail::DxTex
 			hr = ConvertToSinglePlane(*raw.GetImages(), nonPlanared);
 			if (FAILED(hr))
 			{
-				throw Exception("LoadFromDDSFile error");
+				throw Exception(u8"LoadFromDDSFile error");
 			}
 			raw = std::move(nonPlanared);
 		}
@@ -353,7 +353,7 @@ namespace CuImg::Detail::DxTex
 				hr = DirectX::Decompress(*raw.GetImages(), DXGI_FORMAT_R8G8B8A8_UNORM, decompressed);
 				if (FAILED(hr))
 				{
-					throw Exception("LoadFromDDSFile error");
+					throw Exception(u8"LoadFromDDSFile error");
 				}
 				raw = std::move(decompressed);
 			}
@@ -366,7 +366,7 @@ namespace CuImg::Detail::DxTex
 									  DirectX::TEX_THRESHOLD_DEFAULT, converted);
 				if (FAILED(hr))
 				{
-					throw Exception("Convert error");
+					throw Exception(u8"Convert error");
 				}
 
 				raw = std::move(converted);
@@ -390,7 +390,7 @@ namespace CuImg::Detail::DxTex
 		{                                                                                      \
 			const auto hr = InitVariantFrom##winType(val, &var);                               \
 			if (FAILED(hr))                                                                    \
-				throw CuImg_DirectXTexException("[InitVariantFrom" #winType "] ", ErrStr(hr)); \
+				throw CuImg_DirectXTexException(u8"[InitVariantFrom" #winType "] ", ErrStr(hr)); \
 		}                                                                                      \
 	}
 
@@ -402,7 +402,7 @@ namespace CuImg::Detail::DxTex
 		{                                                                                              \
 			const auto hr = InitVariantFrom##winType(val.data(), static_cast<UINT>(val.size()), &var); \
 			if (FAILED(hr))                                                                            \
-				throw CuImg_DirectXTexException("[InitVariantFrom" #winType "] ", ErrStr(hr));         \
+				throw CuImg_DirectXTexException(u8"[InitVariantFrom" #winType "] ", ErrStr(hr));         \
 		}                                                                                              \
 	}
 
@@ -468,7 +468,7 @@ namespace CuImg::Detail::DxTex
 		void operator()(VARIANT &var, const DirectXTexContext::VtWStr &val) const
 		{
 			if (const auto hr = InitVariantFromString(val.c_str(), &var); FAILED(hr))
-				throw CuImg_DirectXTexException("[InitVariantFromString] ", ErrStr(hr));
+				throw CuImg_DirectXTexException(u8"[InitVariantFromString] ", ErrStr(hr));
 		}
 	};
 
@@ -483,7 +483,7 @@ namespace CuImg::Detail::DxTex
 				data.push_back(str.data());
 			}
 			if (const auto hr = InitVariantFromStringArray(data.data(), static_cast<ULONG>(data.size()), &var); FAILED(hr))
-				throw CuImg_DirectXTexException("[InitVariantFromStringArray] ", ErrStr(hr));
+				throw CuImg_DirectXTexException(u8"[InitVariantFromStringArray] ", ErrStr(hr));
 		}
 	};
 
@@ -497,7 +497,7 @@ namespace CuImg::Detail::DxTex
 			const auto ts = val.time_since_epoch().count();
 			const FILETIME ft{static_cast<DWORD>(ts & 0xffffffff), static_cast<DWORD>(ts >> 32)};
 			if (const auto hr = InitVariantFromFileTime(&ft, &var); FAILED(hr))
-				throw CuImg_DirectXTexException("[InitVariantFromFileTime] ", ErrStr(hr));
+				throw CuImg_DirectXTexException(u8"[InitVariantFromFileTime] ", ErrStr(hr));
 		}
 	};
 
@@ -508,7 +508,7 @@ namespace CuImg::Detail::DxTex
 		{
 			const auto hr = InitVariantFromUInt32Array(reinterpret_cast<const ULONG *>(val.data()), (ULONG)val.size(), &var);
 			if (FAILED(hr))
-				throw CuImg_DirectXTexException("[InitVariantFromUInt32Array] ", ErrStr(hr));
+				throw CuImg_DirectXTexException(u8"[InitVariantFromUInt32Array] ", ErrStr(hr));
 		}
 	};
 
@@ -551,7 +551,7 @@ namespace CuImg::Detail::DxTex
 			if (pairValue.vt != VT_NULL)
 			{
 				if (const auto hr = pb->Write(1, &pairKey, &pairValue); FAILED(hr))
-					throw CuImg_DirectXTexException("[IPropertyBag2::Write] ", ErrStr(hr));
+					throw CuImg_DirectXTexException(u8"[IPropertyBag2::Write] ", ErrStr(hr));
 			}
 		}
 		catch (const std::exception_ptr &e)
@@ -560,7 +560,7 @@ namespace CuImg::Detail::DxTex
 			std::rethrow_exception(e);
 		}
 		if (const auto hr = clear(); FAILED(hr))
-			throw CuImg_DirectXTexException("[VariantClear] ", ErrStr(hr));
+			throw CuImg_DirectXTexException(u8"[VariantClear] ", ErrStr(hr));
 	}
 
 	template <typename T>
@@ -596,7 +596,7 @@ namespace CuImg::Detail::DxTex
 		if (const auto rv = params.codec.prop; DirectXTexRangeAssertContinueQ(rv))                                                   \
 		{                                                                                                                            \
 			if (const auto v = DirectXTexRangeAssertValues(rv); v < (beg) || v > (end))                                              \
-				throw CuImg_DirectXTexException("RangeAssert: " #beg " <= " #codec "." #prop "(", CuStr::ToString(v), ") <= " #end); \
+				throw CuImg_DirectXTexException(u8"RangeAssert: " #beg " <= " #codec "." #prop "(", CuStr::ToU8String(v), u8") <= " #end); \
 		}                                                                                                                            \
 	}
 

@@ -1,15 +1,14 @@
 #pragma once
 
 #include "../Exception/Except.hpp"
+#include "../Utility/Utility.hpp"
+#include "../String/String.hpp"
 
 namespace CuCrypto
 {
-	class Exception : std::exception
-	{
-		using std::exception::exception;
-	};
+	CuExcept_MakeException(Exception, CuExcept, Exception);
 
-#define CuCrypto_MakeExceptImpl(ex, ...) CuExcept_MakeStaticException(ex, __VA_ARGS__)
-#define CuCrypto_MakeExcept(...) CuExcept_MakeStaticException(Exception, __VA_ARGS__)
-#define CuCrypto_MakeDynExceptImpl(ex, ...) CuExcept_MakeException(ex, __VA_ARGS__)
+#define CuCrypto_MakeExceptImpl(ex, ...) ex(CuUtil::String::Combine(__VA_ARGS__).data())
+#define CuCrypto_MakeExcept(...) CuCrypto_MakeExceptImpl(Exception, __VA_ARGS__)
+#define CuCrypto_MakeDynExceptImpl(ex, ...) ex(CuStr::Combine(__VA_ARGS__))
 }

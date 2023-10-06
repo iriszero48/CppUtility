@@ -56,7 +56,7 @@ namespace CuImg
 
         void Create(const size_t width, const size_t height)
         {
-            CuUtil_Assert(width < std::numeric_limits<int>::max() && height < std::numeric_limits<int>::max(), OpenCvException);
+            CuAssert(width < std::numeric_limits<int>::max() && height < std::numeric_limits<int>::max());
 
             Image = cv::Mat(static_cast<int>(height), static_cast<int>(width), GetCvType());
         }
