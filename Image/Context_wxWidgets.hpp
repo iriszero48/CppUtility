@@ -11,14 +11,15 @@
 
 namespace CuImg
 {
-    namespace Detail::WxWidgets
-    {
-        [[maybe_unused]] static const auto WxImageInit = []()
+	namespace Detail::WxImage
+	{
+        static std::once_flag InitFlag{};
+
+        struct Config
         {
-            wxInitAllImageHandlers();
-            return true;
-        }();
-    }
+	        bool DoNotInit = false;
+        };
+	}
 
     struct WxImageDiscreteContext : IDiscreteImageContext<WxImageDiscreteContext, CuRGBA>
     {
@@ -33,6 +34,18 @@ namespace CuImg
         } Param{};
 
         wxImage Img{};
+
+        static Detail::WxImage::Config InitConfig;
+
+        static void Init()
+        {
+            std::call_once(Detail::WxImage::InitFlag, []() { if (!InitConfig.DoNotInit) wxInitAllImageHandlers(); });
+        }
+
+        WxImageDiscreteContext()
+        {
+            Init();
+        }
 
         template <bool Const = false>
         class iterator
@@ -172,5 +185,7 @@ namespace CuImg
             return *this;
         }
     };
+
+    Detail::WxImage::Config WxImageDiscreteContext::InitConfig = {};
 }
 #endif
