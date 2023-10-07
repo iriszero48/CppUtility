@@ -2,6 +2,8 @@
 
 #include "IContext.hpp"
 
+#include "../Assert/Assert.hpp"
+
 #ifdef CU_IMG_HAS_OPENCV
 
 #include <opencv2/core.hpp>

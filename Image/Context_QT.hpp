@@ -3,6 +3,8 @@
 #ifdef CU_IMG_HAS_QT
 #include "IContext.hpp"
 
+#include "../Assert/Assert.hpp"
+
 #include <QImage>
 
 namespace CuImg
@@ -42,7 +44,7 @@ namespace CuImg
 
         void Create(const size_t width, const size_t height)
         {
-            CuUtil_Assert(width < std::numeric_limits<int>::max() && height < std::numeric_limits<int>::max(), QtException);
+            CuAssert(width < std::numeric_limits<int>::max() && height < std::numeric_limits<int>::max());
 
             constexpr auto Format = Detail::QT::ToQtFormat<T>::Format();
             Img = QImage(width, height, Format);

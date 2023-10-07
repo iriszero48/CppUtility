@@ -11,21 +11,23 @@ namespace CuFile
 {
     CuExcept_MakeException(Exception, CuExcept, Exception);
 
-    inline std::ofstream OpenForWrite(const std::filesystem::path& path, const int flags = std::ios::out)
+    using FlagType = decltype(std::ios::in | std::ios::out);
+
+    inline std::ofstream OpenForWrite(const std::filesystem::path& path, const FlagType flags = std::ios::out)
     {
         std::ofstream fs(path, flags);
         if (!fs) throw Exception("open file failed");
         return fs;
     }
 
-    inline std::ifstream OpenForRead(const std::filesystem::path& path, const int flags = std::ios::in)
+    inline std::ifstream OpenForRead(const std::filesystem::path& path, const FlagType flags = std::ios::in)
     {
         std::ifstream fs(path, flags);
         if (!fs) throw Exception("open file failed");
         return fs;
     }
 
-    inline std::fstream Open(const std::filesystem::path& path, const int flags = std::ios::in | std::ios::out)
+    inline std::fstream Open(const std::filesystem::path& path, const FlagType flags = std::ios::in | std::ios::out)
     {
         std::fstream fs(path, flags);
         if (!fs) throw Exception("open file failed");

@@ -2,7 +2,8 @@
 
 #include "IContext.hpp"
 
-#include "Utility/Utility.hpp"
+#include "../Utility/Utility.hpp"
+#include "../Assert/Assert.hpp"
 
 #ifdef CU_IMG_HAS_STB
 #define STB_IMAGE_IMPLEMENTATION
@@ -60,7 +61,7 @@ namespace CuImg
 
         void Create(const size_t width, const size_t height)
         {
-            CuUtil_Assert(width < std::numeric_limits<int>::max() && height < std::numeric_limits<int>::max(), StbException);
+            CuAssert(width < std::numeric_limits<int>::max() && height < std::numeric_limits<int>::max());
 
             this->ImageWidth = width;
             this->ImageHeight = height;

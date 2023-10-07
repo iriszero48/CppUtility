@@ -732,9 +732,7 @@ namespace CuVid
         void LoadFile()
         {
             using namespace Detail;
-
-            Ctx.fmtCtx = AV::AvformatAllocContext();
-
+            
             std::optional<std::u8string> url{};
 
             std::visit(CuUtil::Variant::Visitor{[&](const typename DecoderConfig::FilePath &path)
@@ -785,10 +783,11 @@ namespace CuVid
             if (ret == AVERROR_EOF)
             {
                 Ctx.FileEof = true;
-                // return false;
             }
             else if (ret < 0)
+            {
                 ThrowEx("[av_read_frame] {}", AV::AvStrError(ret));
+            }
 
             Ctx.currentCodecCtx = nullptr;
             if (Ctx.pkt->stream_index == Config.VideoIndex)
@@ -803,7 +802,6 @@ namespace CuVid
             }
 
             av_packet_unref(Ctx.pkt);
-
             return false;
         }
 
@@ -833,6 +831,7 @@ namespace CuVid
                     }
                     if (ret == AVERROR(EAGAIN))
                     {
+                        av_packet_unref(Ctx.pkt);
                         return StreamTypeNone;
                     }
 

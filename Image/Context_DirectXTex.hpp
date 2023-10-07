@@ -248,7 +248,7 @@ namespace CuImg
                 WICBitmapTransformOptions BitmapTransform = WICBitmapTransformRotate0;
                 bool CompressedDomainTranscode = true;
                 bool FrequencyOrder = true;
-                // 0 - 4095, Default Value: (image width – 1) >> 8
+                // 0 - 4095, Default Value: (image width - 1) >> 8
                 std::optional<std::uint16_t> HorizontalTileSlices{};
                 bool IgnoreOverlap = false;
                 // 0-3
@@ -266,7 +266,7 @@ namespace CuImg
                 // 0 - 3, Default Value: 3 if ImageQuality > 0.8; otherwise 1;
                 std::optional<std::uint8_t> Subsampling{};
                 bool UseCodecOptions = false;
-                // 0 - 4095, Default Value: (image height – 1) >> 8
+                // 0 - 4095, Default Value: (image height - 1) >> 8
                 std::optional<std::uint16_t> VerticalTileSlices{};
             } JPEGXR{};
 
@@ -283,9 +283,9 @@ namespace CuImg
                 std::uint8_t Overlap = 1;
                 // 0 - 3, Default Value: 3 if ImageQuality > 0.8; otherwise 1;
                 std::optional<std::uint8_t> Subsampling{};
-                // 0 - 4095, Default Value: (image width – 1) >> 8
+                // 0 - 4095, Default Value: (image width - 1) >> 8
                 std::optional<std::uint16_t> HorizontalTileSlices{};
-                // 0 - 4095, Default Value: (image height – 1) >> 8
+                // 0 - 4095, Default Value: (image height - 1) >> 8
                 std::optional<std::uint16_t> VerticalTileSlices{};
                 bool FrequencyOrder = true;
                 bool InterleavedAlpha = false;

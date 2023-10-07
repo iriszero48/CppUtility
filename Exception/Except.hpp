@@ -26,14 +26,14 @@ namespace CuExcept
 		}
 	};
 
-#define CuExcept_MakeExceptionName(type, name)\
-	template <>\
-	struct CuExcept::GetExceptionName<type>\
-	{\
-		std::string operator()() const\
-		{\
-			return name;\
-		}\
+#define CuExcept_MakeExceptionName(type, name) \
+	template <>                                \
+	struct CuExcept::GetExceptionName<type>    \
+	{                                          \
+		std::string operator()() const         \
+		{                                      \
+			return name;                       \
+		}                                      \
 	};
 
 	template <typename T>
@@ -44,11 +44,11 @@ namespace CuExcept
 
 		using StacktraceType =
 #ifdef CU_EXCEPTION_USE_BOOST_STACKTRACE
-		boost::stacktrace::stacktrace;
+			boost::stacktrace::stacktrace;
 #elif defined(__cpp_lib_stacktrace)
-		decltype(std::stacktrace::current());
+			decltype(std::stacktrace::current());
 #else
-		uint64_t;
+			uint64_t;
 #endif
 
 #ifdef CU_EXCEPTION_USE_BOOST_STACKTRACE
@@ -76,21 +76,21 @@ namespace CuExcept
 
 	private:
 		std::u8string whatBuff = u8"an Exception";
-		
+
 	public:
 		ExceptionBase(T message, T exceptionName = CuExcept_GetExceptionName(ExceptionBase, ), std::source_location source = CuExcept_GetSource,
-			StacktraceType stackTrace = CuExcept_GetStackTrace,
-			std::any innerException = {}, std::any data = {}) : Message(std::move(message)),
-			Source(std::move(source)),
-			ExceptionName(std::move(exceptionName)),
-			StackTrace(std::move(stackTrace)),
-			InnerException(std::move(innerException)),
-			Data(std::move(data))
+					  StacktraceType stackTrace = CuExcept_GetStackTrace,
+					  std::any innerException = {}, std::any data = {}) : Message(std::move(message)),
+																		  Source(std::move(source)),
+																		  ExceptionName(std::move(exceptionName)),
+																		  StackTrace(std::move(stackTrace)),
+																		  InnerException(std::move(innerException)),
+																		  Data(std::move(data))
 		{
 			FillWhat();
 		}
 
-		static ExceptionBase Create(const std::exception& ex)
+		static ExceptionBase Create(const std::exception &ex)
 		{
 			return ExceptionBase(
 				ToTString(std::string_view(ex.what())),
@@ -100,7 +100,7 @@ namespace CuExcept
 		}
 
 		template <typename Et>
-		static ExceptionBase Create(const ExceptionBase<Et>& ex)
+		static ExceptionBase Create(const ExceptionBase<Et> &ex)
 		{
 			return ExceptionBase(
 				ToTString(ex.Message),
@@ -122,9 +122,9 @@ namespace CuExcept
 			}
 		}
 
-		[[nodiscard]] char const* what() const override
+		[[nodiscard]] char const *what() const noexcept override
 		{
-			return reinterpret_cast<const char*>(whatBuff.c_str());
+			return reinterpret_cast<const char *>(whatBuff.c_str());
 		}
 
 		[[nodiscard]] virtual T ToString() const
@@ -137,7 +137,7 @@ namespace CuExcept
 		}
 
 		template <typename Str>
-		static T ToTString(Str&& str)
+		static T ToTString(Str &&str)
 		{
 			if constexpr (std::is_same_v<typename T::value_type, typename Str::value_type>)
 			{
@@ -149,7 +149,7 @@ namespace CuExcept
 			}
 		}
 
-		static std::string StackTraceToString(decltype(StackTrace) const& st)
+		static std::string StackTraceToString(decltype(StackTrace) const &st)
 		{
 			return
 #ifdef CU_EXCEPTION_USE_BOOST_STACKTRACE
@@ -163,29 +163,29 @@ namespace CuExcept
 
 	private:
 		template <typename Ct>
-		static void Append(T& str, const std::basic_string_view<Ct>& data)
+		static void Append(T &str, const std::basic_string_view<Ct> &data)
 		{
 			str.append(std::filesystem::path(data).string<typename T::value_type>());
 		}
 
-		static void Append(T& str, const std::basic_string_view<typename T::value_type>& data)
+		static void Append(T &str, const std::basic_string_view<typename T::value_type> &data)
 		{
 			str.append(data);
 		}
 
 		template <typename Ct>
-		static void Append(T& str, const std::basic_string<Ct>& data)
+		static void Append(T &str, const std::basic_string<Ct> &data)
 		{
 			Append(str, std::basic_string_view<Ct>(data));
 		}
 
-		static void Append(T& str, const std::basic_string<typename T::value_type>& data)
+		static void Append(T &str, const std::basic_string<typename T::value_type> &data)
 		{
 			str.append(data);
 		}
 
 		template <typename... Args>
-		static T Appends(Args&& ...args)
+		static T Appends(Args &&...args)
 		{
 			T str{};
 			(Append(str, std::forward<Args>(args)), ...);
@@ -197,24 +197,24 @@ namespace CuExcept
 	using U8Exception = ExceptionBase<std::u8string>;
 }
 
-#define CuExcept_MakeException(ex, baseNamespace, base)\
-	class ex : public baseNamespace::base\
-	{\
-	public:\
-		using T = baseNamespace::base::ValueType;\
-		ex(T message,\
-			T exceptionName = CuExcept_GetExceptionName(ex, baseNamespace::base::),\
-			std::source_location source = CuExcept_GetSource,\
-			StacktraceType stackTrace = CuExcept_GetStackTrace,\
-			std::any innerException = {},\
-			std::any data = {}) : baseNamespace::base(message,\
-exceptionName,\
-source,\
-stackTrace,\
-innerException,\
-data)\
-{\
-}\
+#define CuExcept_MakeException(ex, baseNamespace, base)                            \
+	class ex : public baseNamespace::base                                          \
+	{                                                                              \
+	public:                                                                        \
+		using T = baseNamespace::base::ValueType;                                  \
+		ex(T message,                                                              \
+		   T exceptionName = CuExcept_GetExceptionName(ex, baseNamespace::base::), \
+		   std::source_location source = CuExcept_GetSource,                       \
+		   StacktraceType stackTrace = CuExcept_GetStackTrace,                     \
+		   std::any innerException = {},                                           \
+		   std::any data = {}) : baseNamespace::base(message,                      \
+													 exceptionName,                \
+													 source,                       \
+													 stackTrace,                   \
+													 innerException,               \
+													 data)                         \
+		{                                                                          \
+		}                                                                          \
 	};
 #define CuExcept_MakeExceptionInstImpl(func, ex, ...) ex(func(__VA_ARGS__))
 

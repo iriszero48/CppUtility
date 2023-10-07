@@ -12,7 +12,8 @@ namespace CuCrypto
 
 		HashValueType Data{};
 
-		Hash(const HashValueType &val);
+		Hash(const HashValueType &val) : Data(val) {}
+		Hash(HashValueType &&val) : Data(std::move(val)) {}
 
 		void ToString(std::string &buf) const;
 
@@ -44,11 +45,6 @@ namespace CuCrypto
 	};
 
 #define CuCrypto_MakeU8ArrayHashImpl(type)                               \
-	template <>                                                          \
-	inline Hash<type>::Hash(const type &val) : Data(val)                 \
-	{                                                                    \
-	}                                                                    \
-                                                                         \
 	template <>                                                          \
 	inline void Hash<type>::ToString(std::string &buf) const             \
 	{                                                                    \
