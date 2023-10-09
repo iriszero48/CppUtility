@@ -8,6 +8,7 @@
 #include "../Utility/Utility.hpp"
 
 #include <string>
+#include <mutex>
 
 namespace CuImg
 {
@@ -18,6 +19,18 @@ namespace CuImg
         struct Config
         {
 	        bool DoNotInit = false;
+        };
+
+        template <bool C = true>
+        struct Ptr
+        {
+            using Value = const uint8_t *;
+        };
+
+        template <>
+        struct Ptr<false>
+        {
+            using Value = uint8_t *;
         };
 	}
 
@@ -50,17 +63,6 @@ namespace CuImg
         template <bool Const = false>
         class iterator
         {
-            template <bool C = true>
-            struct Ptr
-            {
-                using Value = const uint8_t *;
-            };
-            template <>
-            struct Ptr<false>
-            {
-                using Value = uint8_t *;
-            };
-
             constexpr static size_t Nop()
             {
                 return ~0ULL;
@@ -68,16 +70,16 @@ namespace CuImg
 
             struct Context
             {
-                typename Ptr<Const>::Value Rgb = nullptr;
-                typename Ptr<Const>::Value A = nullptr;
+                typename Detail::WxImage::Ptr<Const>::Value Rgb = nullptr;
+                typename Detail::WxImage::Ptr<Const>::Value A = nullptr;
                 size_t Count = 0;
                 size_t Idx = Nop();
             } ctx;
 
             struct Proxy
             {
-                typename Ptr<Const>::Value Rgb = nullptr;
-                typename Ptr<Const>::Value a = nullptr;
+                typename Detail::WxImage::Ptr<Const>::Value Rgb = nullptr;
+                typename Detail::WxImage::Ptr<Const>::Value a = nullptr;
 
                 Proxy &operator=(const CuRGBA &pix)
                 {

@@ -1,4 +1,5 @@
 #pragma once
+// CU_IMG_DIRECTXTEX_HAS_WIC
 
 #ifdef CU_IMG_HAS_DIRECTXTEX
 
@@ -10,7 +11,10 @@
 #include <variant>
 #include <set>
 
+#ifdef CU_IMG_DIRECTXTEX_HAS_WIC
 #include <wincodec.h>
+#endif
+
 #include <DirectXTex.h>
 
 #include "../Enum/Enum.hpp"
@@ -119,6 +123,7 @@ namespace CuImg
 
 	    inline std::u8string ErrStr(const HRESULT hr)
 	    {
+#ifdef CU_IMG_DIRECTXTEX_HAS_WIC
 		    std::wstring err = CuStr::CombineW("Error 0x", std::hex, static_cast<uint32_t>(hr), ": ");
 
 		    LPTSTR errorText = nullptr;
@@ -143,6 +148,9 @@ namespace CuImg
 
             return CuStr::FormatU8("{}unknown error(FormatMessage got an error: 0x{})", err,
                 CuStr::Combine(std::hex, std::setw(8), std::setfill('0'), GetLastError()));
+#else
+            return CuStr::ToU8String(CuStr::Combine("Error 0x", std::hex, static_cast<uint32_t>(hr)));
+#endif
 	    }
 
         template <size_t S>
@@ -170,15 +178,19 @@ namespace CuImg
     if (const auto hr = expr; FAILED(hr))       \
     throw CuImg_DirectXTexException(std::u8string_view(GetFunctionName(CuUtil::String::ToBuffer(#expr)).data()), u8": ", ErrStr(hr))
 
+#ifdef CU_IMG_DIRECTXTEX_HAS_WIC
             inline void CoInitializeEx(LPVOID pvReserved, DWORD dwCoInit)
             {
                 CuImg__DxTex_WIN_API(::CoInitializeEx(pvReserved, dwCoInit));
             }
+#endif
         }
 
         [[maybe_unused]] static bool Init = []()
         {
+#ifdef CU_IMG_DIRECTXTEX_HAS_WIC
             Api::CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+#endif
             return true;
         }();
     }
@@ -221,12 +233,15 @@ namespace CuImg
         {
             // DDS
             DXGI_FORMAT DestFmt = DXGI_FORMAT_R8G8B8A8_UNORM;
-            ID3D11Device *CompressDevice = nullptr;
             bool TexAlphaModePremultiplied = false;
+#ifdef CU_IMG_DIRECTXTEX_HAS_WIC
+            ID3D11Device *CompressDevice = nullptr;
+#endif
 
             // WIC
             GUID *WicFmt = nullptr;
 
+#ifdef CU_IMG_DIRECTXTEX_HAS_WIC
             struct WicJPEG
             {
                 // 0-1.0
@@ -316,6 +331,7 @@ namespace CuImg
                 // On/Off
                 bool EnableV5Header32bppBGRA = false;
             } BMP{};
+#endif
 
             std::unordered_map<PhotoProp, PropType> WicProps{};
         } Param{};

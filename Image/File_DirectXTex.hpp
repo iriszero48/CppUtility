@@ -1,8 +1,11 @@
 #pragma once
+// CU_IMG_DIRECTXTEX_HAS_WIC
 
+#ifdef CU_IMG_DIRECTXTEX_HAS_WIC
 #include <wincodec.h>
 #include <propvarutil.h>
 #include <strsafe.h>
+#endif
 
 #include "File_Utility.hpp"
 #include "Image.hpp"
@@ -14,8 +17,8 @@ namespace CuImg::Detail::DxTex
 {
 	namespace Api
 	{
-		inline void Compress(
-			ID3D11Device *pDevice,
+#ifdef CU_IMG_DIRECTXTEX_HAS_WIC
+		inline void Compress(ID3D11Device *pDevice,
 			const DirectX::Image &srcImage,
 			DXGI_FORMAT format,
 			DirectX::TEX_COMPRESS_FLAGS compress,
@@ -24,6 +27,7 @@ namespace CuImg::Detail::DxTex
 		{
 			CuImg__DxTex_WIN_API(DirectX::Compress(pDevice, srcImage, format, compress, alphaWeight, image));
 		}
+#endif
 
 		inline void Compress(
 			const DirectX::Image &srcImage,
@@ -87,6 +91,7 @@ namespace CuImg::Detail::DxTex
 			CuImg__DxTex_WIN_API(DirectX::SaveToHDRFile(image, szFile));
 		}
 
+#ifdef CU_IMG_DIRECTXTEX_HAS_WIC
 		inline void LoadFromWICFile(const wchar_t *szFile,
 									DirectX::WIC_FLAGS flags, DirectX::TexMetadata *metadata,
 									DirectX::ScratchImage &image,
@@ -103,6 +108,7 @@ namespace CuImg::Detail::DxTex
 			CuImg__DxTex_WIN_API(
 				DirectX::SaveToWICFile(image, flags, guidContainerFormat, szFile, targetFormat, setCustomProps));
 		}
+#endif
 	}
 
 	enum class WicParam
@@ -116,6 +122,7 @@ namespace CuImg::Detail::DxTex
 		TIFF
 	};
 
+#ifdef CU_IMG_DIRECTXTEX_HAS_WIC
 	inline void DirectXTexWicLoadInfo(IWICMetadataQueryReader *reader,
 									  decltype(DirectXTexContext::LoadInfo::WicProps) &dict)
 	{
@@ -294,6 +301,7 @@ namespace CuImg::Detail::DxTex
 				throw CuImg_DirectXTexException(u8"[PropVariantClear] ", ErrStr(hr));
 		}
 	}
+#endif
 
 	inline void DirectXTexLoadFile(const std::filesystem::path &path, ImageRGBA_DirectXTex &img)
 	{
@@ -320,6 +328,7 @@ namespace CuImg::Detail::DxTex
 		}
 		else
 		{
+#ifdef CU_IMG_DIRECTXTEX_HAS_WIC
 			std::function<void(IWICMetadataQueryReader *)> mqr = nullptr;
 			if (!skipLoadWicProps)
 			{
@@ -330,6 +339,9 @@ namespace CuImg::Detail::DxTex
 			}
 			Api::LoadFromWICFile(
 				path.wstring().c_str(), DirectX::WIC_FLAGS_NONE, &info, raw, mqr);
+#else
+            throw Exception(u8"Unsupported Image Format");
+#endif
 		}
 
 		ctx.GetInfo().SrcFmt = info.format;
@@ -377,6 +389,7 @@ namespace CuImg::Detail::DxTex
 		img.GetContext() = std::move(ctx);
 	}
 
+#ifdef CU_IMG_DIRECTXTEX_HAS_WIC
 	template <typename T>
 	struct DirectXTexWicWriteVariant
 	{
@@ -703,6 +716,7 @@ namespace CuImg::Detail::DxTex
 #undef MakeWriteProp
 #undef RangeAssert
 	}
+#endif
 
 	inline void DirectXTexSaveFile(const std::filesystem::path &path, const ImageRGBA_DirectXTex &img)
 	{
@@ -729,12 +743,14 @@ namespace CuImg::Detail::DxTex
 
 		if (DirectX::IsCompressed(img.GetParam().DestFmt))
 		{
+#ifdef CU_IMG_DIRECTXTEX_HAS_WIC
 			if (img.GetParam().CompressDevice)
 			{
 				Api::Compress(img.GetParam().CompressDevice, *ptr, img.GetParam().DestFmt,
 							  DirectX::TEX_COMPRESS_DEFAULT, 1.0f, compressed);
 			}
 			else
+#endif
 			{
 				Api::Compress(*ptr, img.GetParam().DestFmt, DirectX::TEX_COMPRESS_DEFAULT, 1.0f, compressed);
 			}
@@ -762,6 +778,7 @@ namespace CuImg::Detail::DxTex
 		}
 		else
 		{
+#ifdef CU_IMG_DIRECTXTEX_HAS_WIC
 			const GUID *codec;
 			auto param = WicParam::Other;
 
@@ -828,6 +845,9 @@ namespace CuImg::Detail::DxTex
 							   {
 								   DirectXTexWicSaveParam(pb, img.GetParam(), param);
 							   });
+#else
+            throw Exception(u8"Unsupported Image Format");
+#endif
 		}
 	}
 }
