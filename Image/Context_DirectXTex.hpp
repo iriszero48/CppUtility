@@ -1,5 +1,5 @@
 #pragma once
-// CU_IMG_DIRECTXTEX_HAS_WIC
+// CU_IMG_DIRECTXTEX_DISBALE_WIC
 
 #ifdef CU_IMG_HAS_DIRECTXTEX
 
@@ -10,6 +10,14 @@
 #include <chrono>
 #include <variant>
 #include <set>
+
+#ifdef CuUtil_Platform_Windows
+#define CU_IMG_DIRECTXTEX_HAS_WIC
+#endif
+
+#ifdef CU_IMG_DIRECTXTEX_DISBALE_WIC
+#undef CU_IMG_DIRECTXTEX_HAS_WIC
+#endif
 
 #ifdef CU_IMG_DIRECTXTEX_HAS_WIC
 #include <wincodec.h>
