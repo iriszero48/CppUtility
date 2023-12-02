@@ -94,6 +94,42 @@ namespace CuThread
         std::condition_variable writeCond{};
     };
 
+    class Semaphore
+    {
+    public:
+	    explicit Semaphore(const size_t count) : count(count) {}
+
+        void Release()
+        {
+            std::unique_lock lock(mtx);
+            count++;
+            lock.unlock();
+            cv.notify_one();
+        }
+
+        void WaitOne()
+        {
+            std::unique_lock lock(mtx);
+            cv.wait(lock, [&]() { return count != 0; });
+            count--;
+        }
+
+        void lock()
+	    {
+            WaitOne();
+	    }
+
+        void unlock()
+	    {
+            Release();
+	    }
+
+    private:
+        std::mutex mtx;
+        std::condition_variable cv;
+        size_t count;
+    };
+
     template <typename T>
     class Stack
     {

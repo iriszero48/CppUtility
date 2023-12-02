@@ -10,6 +10,7 @@
 #include <string>
 #include <typeindex>
 #include <unordered_map>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
@@ -65,6 +66,8 @@ namespace CuArgs
             SetValueTypeImp<1>::Type,
             SetValueTypeImp<2>::Type>;
 
+        std::unordered_set<std::string> Alias{};
+
         IArgument() = default;
         virtual ~IArgument() = default;
         IArgument(const IArgument &) = default;
@@ -96,16 +99,15 @@ namespace CuArgs
 
         using ValidateFuncType = std::function<bool(const ValueType &)>;
 
-        ValidateFuncType Validate = [](const auto &)
-        { return true; };
+        ValidateFuncType Validate = [](const auto&) { return true; };
 
         explicit Argument(std::string name,
                           std::string desc,
                           ValueType defaultValue,
                           ConvertFuncType convert = DefaultConvert,
                           ToStringFuncType toString = DefaultToString)
-            : name(std::move(name)), desc(std::move(desc)), val(std::move(defaultValue)), convert(convert),
-              toString(toString)
+            : name(std::move(name)), desc(std::move(desc)), val(std::move(defaultValue)), convert(std::move(convert)),
+              toString(std::move(toString))
         {
         }
 
@@ -113,7 +115,7 @@ namespace CuArgs
                           std::string desc,
                           ConvertFuncType convert = DefaultConvert,
                           ToStringFuncType toString = DefaultToString)
-            : name(std::move(name)), desc(std::move(desc)), convert(convert), toString(toString)
+            : name(std::move(name)), desc(std::move(desc)), convert(std::move(convert)), toString(std::move(toString))
         {
         }
 
@@ -254,7 +256,7 @@ namespace CuArgs
             return std::string(CuEnum::ToString(value));
         }
 
-        [[nodiscard]] operator BaseType &()
+        [[nodiscard]] explicit operator BaseType &()
         {
             return *reinterpret_cast<BaseType *>(this);
         }
@@ -313,9 +315,9 @@ namespace CuArgs
         {
             const auto reqCheck = [&]
             {
-                return std::find_if(args.begin(), args.end(),
-                                    [](const auto &pair)
-                                    { return pair.second->IsRequired() && pair.second->Empty(); });
+                return std::ranges::find_if(args,
+                                            [](const auto &pair)
+                                            { return pair.second->IsRequired() && pair.second->Empty(); });
             };
 
             if (argc == 1 && reqCheck() != args.end())
@@ -369,14 +371,23 @@ namespace CuArgs
         }
 
     private:
+        void CheckAdd(const std::string& name, IArgument* arg)
+        {
+            if (args.contains(name))
+            {
+                throw Exception(CuStr::Appends("\"", name, "\" existed"));
+            }
+            args[name] = arg;
+        }
+
         template <typename T>
         void AddImpl(T &arg)
         {
-            if (args.find(arg.GetName()) != args.end())
+            CheckAdd(arg.GetName(), &arg);
+            for (const auto & alias : arg.Alias)
             {
-                throw Exception(CuStr::Appends("\"", args.at(arg.GetName())->GetName(), "\" existed"));
+                CheckAdd(alias, &arg);
             }
-            args[arg.GetName()] = &arg;
         }
 
     public:
@@ -408,11 +419,17 @@ namespace CuArgs
         {
             std::priority_queue<std::string, std::vector<std::string>, std::greater<>> item{};
             std::size_t maxLen = 0;
-            for (const auto &[k, _] : args)
+            for (const auto &[k, v] : args)
             {
                 if (const auto len = k.length(); len > maxLen)
                     maxLen = len;
-                item.push(k);
+                std::string name = k;
+                for (const auto & alias : v->Alias)
+                {
+                    name.push_back(',');
+                    name.append(alias);
+                }
+                item.push(name);
             }
 
             std::string ss;

@@ -114,7 +114,7 @@ namespace CuUtil
 		}
 
 		template <typename T, size_t S>
-		constexpr std::array<T, S> ToBuffer(std::array<T, S> &&str)
+		constexpr std::array<T, S> ToBuffer(std::array<T, S> str)
 		{
 			return str;
 		}
@@ -170,6 +170,44 @@ namespace CuUtil
 
 			size_t i = 0;
 			(Detail::CombineAppend(i, buf, ToBuffer(std::forward<Args>(args))), ...);
+			buf[length] = 0;
+			return buf;
+		}
+
+		namespace Detail
+		{
+			template <size_t BufLength, typename DT, size_t DS, typename ST, size_t SS>
+			constexpr void JoinAppend(size_t& idx, std::array<char, BufLength>& buf, const std::array<DT, DS>& de, const std::array<ST, SS>& str)
+			{
+				if (idx != 0)
+				{
+					constexpr auto len = DS - 1;
+					for (size_t i = 0; i < len; ++i)
+					{
+						buf[idx + i] = de[i];
+					}
+					idx += len;
+				}
+
+				constexpr auto len = SS - 1;
+				for (size_t i = 0; i < len; ++i)
+				{
+					buf[idx + i] = str[i];
+				}
+				idx += len;
+			}
+		}
+
+		template <typename Str, typename... Args>
+		consteval auto Join(Str&& str, Args &&...args)
+		{
+			constexpr auto length = (Length<Args>::Value() + ...) + ((sizeof...(Args)) - 1) * Length<Str>::Value();
+
+			std::array<typename GetCharType<decltype(std::get<0>(std::forward_as_tuple(std::forward<Args>(args)...)))>::Type, length + 1> buf{};
+
+			const auto de = ToBuffer(std::forward<Str>(str));
+			size_t i = 0;
+			(Detail::JoinAppend(i, buf, de, ToBuffer(std::forward<Args>(args))), ...);
 			buf[length] = 0;
 			return buf;
 		}
