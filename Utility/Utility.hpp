@@ -3,6 +3,21 @@
 #include <array>
 #include <utility>
 
+#ifdef __cpp_lib_source_location
+#define CU_UTILITY_USE_STD_SOURCE_LOCATION
+#endif
+
+#ifdef CU_UTILITY_USE_BOOST_STACKTRACE
+#include <boost/stacktrace.hpp>
+#elif defined(__cpp_lib_stacktrace)
+#define CU_UTILITY_USE_STD_STACKTRACE
+#include <stacktrace>
+#endif
+
+#ifdef CU_UTILITY_USE_STD_SOURCE_LOCATION
+#include <source_location>
+#endif
+
 #pragma region private
 
 #define CuUtil__ToStringFunc(x) #x
@@ -503,8 +518,86 @@ namespace CuUtil
 			}
 		}
 
+#ifndef CU_UTILITY_USE_STD_SOURCE_LOCATION
+		struct SourceLocation {
+			constexpr SourceLocation() = default;
+
+			constexpr SourceLocation(const std::uint_least32_t line,
+				const char* const file,
+				const char* const function = "???") noexcept : line_(line), file_(file), function_(function) {}
+
+			constexpr uint_least32_t line() const noexcept {
+				return line_;
+			}
+			constexpr uint_least32_t column() const noexcept {
+				return 0;
+			}
+			constexpr const char* file_name() const noexcept {
+				return file_;
+			}
+			constexpr const char* function_name() const noexcept {
+				return function_;
+			}
+
+		private:
+			std::uint_least32_t line_{};
+			const char* file_ = "";
+			const char* function_ = "";
+		};
+#endif
+
+		using SourceLocationType =
+#ifdef CU_UTILITY_USE_STD_SOURCE_LOCATION
+			std::source_location;
+#else
+			SourceLocation;
+#endif
+
+#ifdef CU_UTILITY_USE_STD_SOURCE_LOCATION
+#define CuUtil_Source_Current std::source_location::current()
+#else
+#define CuUtil_Source_Current CuUtil::Source::SourceLocation(__LINE__, __FILE__)
+#endif
+
 #define CuUtil_GetFilename(path) CuUtil::Source::Detail::GetFilenameImpl<CuUtil::Source::Detail::GetFilenameOffset(path)>(path)
 #define CuUtil_Filename CuUtil_GetFilename(__FILE__)
+	}
+
+	namespace Stacktrace
+	{
+		struct Stacktrace
+		{
+#ifdef CU_UTILITY_USE_BOOST_STACKTRACE
+			boost::stacktrace::stacktrace Native{};
+#elif defined(CU_UTILITY_USE_STD_STACKTRACE)
+			decltype(std::stacktrace::current())  Native{};
+#else
+			static constexpr const char* Native = "???";
+#endif
+
+			static Stacktrace Current()
+			{
+				Stacktrace st{};
+#ifdef CU_UTILITY_USE_BOOST_STACKTRACE
+				st.Native = boost::stacktrace::stacktrace();
+#elif defined(CU_UTILITY_USE_STD_STACKTRACE)
+				st.Native = std::stacktrace::current();
+#endif
+				return st;
+			}
+
+			std::string ToString() const
+			{
+				return
+#ifdef CU_UTILITY_USE_BOOST_STACKTRACE
+					boost::stacktrace::to_string(Native);
+#elif defined(CU_UTILITY_USE_STD_STACKTRACE)
+					std::to_string(Native);
+#else
+					Native;
+#endif		
+			}
+		};
 	}
 
 #if defined(DEBUG) || defined(_DEBUG)

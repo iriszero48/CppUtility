@@ -132,7 +132,7 @@ namespace CuArgs
 	        catch (const std::exception& ex)
 	        {
 		        throw ConvertException("convert failed", CuExcept::GetExceptionName<ConvertException>{}(),
-		                               std::source_location::current(), CuExcept_GetStackTrace, ex);
+                    CuUtil_Source_Current, CuUtil::Stacktrace::Stacktrace::Current(), ex);
 	        }
         }
 

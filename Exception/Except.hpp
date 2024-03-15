@@ -1,19 +1,12 @@
 #pragma once
 
 #include <utility>
-#include <source_location>
 #include <any>
 #include <string>
 #include <string_view>
 
 #include "../String/String.hpp"
 #include "../Utility/Utility.hpp"
-
-#ifdef CU_EXCEPTION_USE_BOOST_STACKTRACE
-#include <boost/stacktrace.hpp>
-#elif defined(__cpp_lib_stacktrace)
-#include <stacktrace>
-#endif
 
 namespace CuExcept
 {
@@ -42,33 +35,14 @@ namespace CuExcept
 	public:
 		using ValueType = T;
 
-		using StacktraceType =
-#ifdef CU_EXCEPTION_USE_BOOST_STACKTRACE
-			boost::stacktrace::stacktrace;
-#elif defined(__cpp_lib_stacktrace)
-			decltype(std::stacktrace::current());
-#else
-			uint64_t;
-#endif
-
-#ifdef CU_EXCEPTION_USE_BOOST_STACKTRACE
-#define CuExcept_GetStackTrace boost::stacktrace::stacktrace()
-#elif defined(__cpp_lib_stacktrace)
-#define CuExcept_GetStackTrace std::stacktrace::current()
-#else
-#define CuExcept_GetStackTrace 0
-#endif
-
 #define CuExcept_GetExceptionName(exceptionClass, prefix) prefix ToTString(CuExcept::GetExceptionName<exceptionClass>{}())
-
-#define CuExcept_GetSource std::source_location::current()
 
 		T Message{};
 
-		std::source_location Source{};
+		CuUtil::Source::SourceLocationType Source{};
 		T ExceptionName{};
 
-		StacktraceType StackTrace{};
+		CuUtil::Stacktrace::Stacktrace StackTrace{};
 
 		std::any InnerException{};
 
@@ -78,8 +52,8 @@ namespace CuExcept
 		std::u8string whatBuff = u8"an Exception";
 
 	public:
-		ExceptionBase(T message, T exceptionName = CuExcept_GetExceptionName(ExceptionBase, ), std::source_location source = CuExcept_GetSource,
-					  StacktraceType stackTrace = CuExcept_GetStackTrace,
+		ExceptionBase(T message, T exceptionName = CuExcept_GetExceptionName(ExceptionBase, ), CuUtil::Source::SourceLocationType source = CuUtil_Source_Current,
+			CuUtil::Stacktrace::Stacktrace stackTrace = CuUtil::Stacktrace::Stacktrace::Current(),
 					  std::any innerException = {}, std::any data = {}) : Message(std::move(message)),
 																		  Source(std::move(source)),
 																		  ExceptionName(std::move(exceptionName)),
@@ -95,8 +69,8 @@ namespace CuExcept
 			return ExceptionBase(
 				ToTString(std::string_view(ex.what())),
 				CuExcept_GetExceptionName(decltype(ex), ),
-				CuExcept_GetSource,
-				CuExcept_GetStackTrace, ex);
+				CuUtil_Source_Current,
+				CuUtil::Stacktrace::Stacktrace::Current(), ex);
 		}
 
 		template <typename Et>
@@ -133,7 +107,7 @@ namespace CuExcept
 			return Appends(
 				ExceptionName, ": "sv, Message, "\n  at "sv,
 				std::filesystem::path(Source.file_name()).filename().string<typename T::value_type>(), ":"sv, std::to_string(Source.line()),
-				" "sv, std::string_view(Source.function_name()), "\n"sv, StackTraceToString(StackTrace));
+				" "sv, std::string_view(Source.function_name()), "\n"sv, StackTrace.ToString());
 		}
 
 		template <typename Str>
@@ -147,18 +121,6 @@ namespace CuExcept
 			{
 				return std::filesystem::path(std::forward<Str>(str)).string<typename T::value_type>();
 			}
-		}
-
-		static std::string StackTraceToString(decltype(StackTrace) const &st)
-		{
-			return
-#ifdef CU_EXCEPTION_USE_BOOST_STACKTRACE
-				boost::stacktrace::to_string(st);
-#elif defined(__cpp_lib_stacktrace)
-				std::to_string(st);
-#else
-				std::to_string(st);
-#endif
 		}
 
 	private:
@@ -204,8 +166,8 @@ namespace CuExcept
 		using T = baseNamespace::base::ValueType;                                  \
 		ex(T message,                                                              \
 		   T exceptionName = CuExcept_GetExceptionName(ex, baseNamespace::base::), \
-		   std::source_location source = CuExcept_GetSource,                       \
-		   StacktraceType stackTrace = CuExcept_GetStackTrace,                     \
+		   CuUtil::Source::SourceLocationType source = CuUtil_Source_Current,                         \
+		   CuUtil::Stacktrace::Stacktrace stackTrace = CuUtil::Stacktrace::Stacktrace::Current(),                     \
 		   std::any innerException = {},                                           \
 		   std::any data = {}) : baseNamespace::base(message,                      \
 													 exceptionName,                \
