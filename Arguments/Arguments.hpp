@@ -14,10 +14,11 @@
 #include <variant>
 #include <vector>
 
-#include "Enum/Enum.hpp"
+#include "../Enum/Enum.hpp"
 #include "../Utility/Utility.hpp"
 #include "../String/String.hpp"
 #include "../Exception/Except.hpp"
+#include "../Ranges/Ranges.hpp"
 
 namespace CuArgs
 {
@@ -315,7 +316,7 @@ namespace CuArgs
         {
             const auto reqCheck = [&]
             {
-                return std::ranges::find_if(args,
+                return CuRanges::FindIf(args,
                                             [](const auto &pair)
                                             { return pair.second->IsRequired() && pair.second->Empty(); });
             };
