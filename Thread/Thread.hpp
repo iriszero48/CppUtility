@@ -36,7 +36,7 @@ namespace CuThread
     class Channel
     {
     public:
-        std::atomic_size_t DynLimit = 0;
+        std::size_t DynLimit = 0;
 
         void Write(T &&data)
         {

@@ -468,6 +468,19 @@ namespace CuStr
     }
 
     __Suit2(__JoinImpl, Join);
+
+    namespace Views
+    {
+
+#define __JoinViewsImpl(type, func)                              \
+    template <std::ranges::range Rng, typename Str>                       \
+    [[nodiscard]] type func(Rng rng, const Str &seq) \
+    {                                                       \
+        return JoinAs<std::basic_string<char>>(rng.begin(), rng.end(), seq);                 \
+    }
+
+        __Suit2(__JoinViewsImpl, Join);
+    }
 #pragma endregion Join
 
 #pragma region Split
