@@ -524,7 +524,7 @@ namespace CuUtil
 
 			constexpr SourceLocation(const std::uint_least32_t line,
 				const char* const file,
-				const char* const function = "???") noexcept : line_(line), file_(file), function_(function) {}
+				const char* const function = "<unknown function>") noexcept : line_(line), file_(file), function_(function) {}
 
 			constexpr uint_least32_t line() const noexcept {
 				return line_;
@@ -572,7 +572,7 @@ namespace CuUtil
 #elif defined(CU_UTILITY_USE_STD_STACKTRACE)
 			decltype(std::stacktrace::current())  Native{};
 #else
-			static constexpr const char* Native = "???";
+			static constexpr const char* Native = "<unknown stack>";
 #endif
 
 			static Stacktrace Current()

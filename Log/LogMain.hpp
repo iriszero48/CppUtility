@@ -5,6 +5,7 @@
 #include "../StdIO/StdIO.hpp"
 
 #include <source_location>
+#include <thread>
 
 namespace CuLog
 {
