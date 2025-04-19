@@ -6,6 +6,7 @@
 
 #include <source_location>
 #include <fstream>
+#include <thread>
 
 namespace CuLog
 {
