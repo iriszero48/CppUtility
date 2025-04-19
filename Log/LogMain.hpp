@@ -5,6 +5,7 @@
 #include "../StdIO/StdIO.hpp"
 
 #include <source_location>
+#include <fstream>
 
 namespace CuLog
 {
@@ -26,21 +27,26 @@ namespace CuLog
 		}
     };
 
-    static CuLog::Logger<LogMessage> Log{};
+    static Logger<LogMessage> Log{};
     static std::thread LogThread{};
+	static std::filesystem::path LogFile{};
+	static LogLevel ConsoleLogLevel = LogLevel::Info;
+	static LogLevel FileLogLevel = LogLevel::Info;
 
 	inline void LogHandler()
 	{
-		const std::unordered_map<CuLog::LogLevel, CuConsole::Color> colorMap
+		const std::unordered_map<LogLevel, CuConsole::Color> colorMap
 		{
-			{CuLog::LogLevel::None, CuConsole::Color::White },
-			{CuLog::LogLevel::Error, CuConsole::Color::Red },
-			{CuLog::LogLevel::Warn, CuConsole::Color::Yellow },
-			{CuLog::LogLevel::Info, CuConsole::Color::White },
-			{CuLog::LogLevel::Verb, CuConsole::Color::Gray },
-			{CuLog::LogLevel::Debug, CuConsole::Color::Blue }
+			{LogLevel::None, CuConsole::Color::White },
+			{LogLevel::Error, CuConsole::Color::Red },
+			{LogLevel::Warn, CuConsole::Color::Yellow },
+			{LogLevel::Info, CuConsole::Color::White },
+			{LogLevel::Verb, CuConsole::Color::Gray },
+			{LogLevel::Debug, CuConsole::Color::Blue }
 		};
 
+		std::ofstream fs{};
+		
 		while (true)
 		{
 			const auto [level, raw] = Log.Chan.Read();
@@ -49,8 +55,21 @@ namespace CuLog
 			auto out = CuStr::FormatU8("[{}] [{}] [{}] {}{}", CuEnum::ToString(level), LogMessage::LogTime(time), thId, src, msg);
 			if (out[out.length() - 1] == u8'\n') out.erase(out.length() - 1);
 
-			SetForegroundColor(colorMap.at(level));
-			CuConsole::WriteLine(CuStr::ToDirtyUtf8StringView(out));
+			if (level <= ConsoleLogLevel)
+			{
+				SetForegroundColor(colorMap.at(level));
+				CuConsole::WriteLine(CuStr::ToDirtyUtf8StringView(out));
+			}
+
+			if (!LogFile.empty() && level <= FileLogLevel)
+			{
+				std::ofstream fs(LogFile, std::ios::out | std::ios::binary | std::ios::app);
+				if (fs)
+				{
+					fs.write((const char*)out.c_str(), out.length());
+				}
+				fs.close();
+			}
 
 			if (level == CuLog::LogLevel::None) break;
 		}
