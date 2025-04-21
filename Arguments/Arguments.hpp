@@ -484,7 +484,10 @@ namespace CuArgs
         template <typename T, ArgLengthType Len, bool Required>
         [[nodiscard]] std::optional<T> Get(const Argument<T, Len, Required> &arg) const
         {
-            const auto ia = args.at(arg.GetName());
+            auto it = args.find(arg.GetName());
+            if (it == args.end()) throw Exception(CuStr::Appends("[arg:", arg.GetName(), "] Option not found"));
+
+            const auto* ia = it->second;
             return ia->Empty() ? std::nullopt : std::make_optional(std::any_cast<T>(ia->Get()));
         }
 
