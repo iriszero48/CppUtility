@@ -479,7 +479,9 @@ namespace CuStr
         return JoinAs<std::basic_string<char>>(rng.begin(), rng.end(), seq);                 \
     }
 
+#ifdef __cpp_lib_ranges
         __Suit2(__JoinViewsImpl, Join);
+#endif
     }
 #pragma endregion Join
 

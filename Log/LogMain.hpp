@@ -22,7 +22,7 @@ namespace CuLog
 			tm local{};
 			CuTime::Local(&local, &t);
 			std::ostringstream ss;
-			ss << std::put_time(&local, "%F %X");
+			ss << std::put_time(&local, "%Y-%m-%d %H:%M:%S");
 			return ss.str();
 		}
     };

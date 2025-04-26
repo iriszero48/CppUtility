@@ -11,7 +11,7 @@ namespace CuBit
 {
 	enum class Endian
 	{
-#ifdef __cpp_lib_endian
+#if defined(__cpp_lib_endian) && !defined(__APPLE__)
 		Little = static_cast<std::underlying_type_t<std::endian>>(std::endian::little),
 		Big = static_cast<std::underlying_type_t<std::endian>>(std::endian::big),
 		Native = static_cast<std::underlying_type_t<std::endian>>(std::endian::native)
