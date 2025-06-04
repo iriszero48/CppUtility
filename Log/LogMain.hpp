@@ -14,7 +14,7 @@ namespace CuLog
         std::chrono::system_clock::time_point Time;
 		std::thread::id ThreadId;
         std::string Source;
-        std::u8string Message;
+        CuStr::U8StringType Message;
 
         static std::string LogTime(const std::chrono::system_clock::time_point& time)
 		{

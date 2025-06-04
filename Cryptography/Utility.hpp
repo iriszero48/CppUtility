@@ -29,12 +29,13 @@ namespace CuCrypto::Detail
 			constexpr auto bufSize = size * 2 + 1;
 
 			std::string res(bufSize, 0);
-			if (const auto [p, e] = std::to_chars(res.data(), res.data() + bufSize, value, 16);
+			if (const auto [p, e] = std::to_chars(res.data(), res.data() + bufSize - 1, value, 16);
 				e != std::errc{})
 				throw CuCrypto_MakeExcept("convert error");
 
 			const std::string_view revSv(res.data());
-			hex.append(bufSize - 1 - revSv.length(), '0');
+			if (const auto padSz = bufSize - 1 - revSv.length(); padSz)
+                hex.append(padSz, '0');
 			hex.append(revSv);
 		}
 

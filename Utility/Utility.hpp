@@ -176,8 +176,14 @@ namespace CuUtil
 			}
 		}
 
+#ifdef __cpp_consteval
+#define CuUtil_CONSTEVAL consteval
+#else
+#define CuUtil_CONSTEVAL constexpr
+#endif
+
 		template <typename... Args>
-		consteval auto Combine(Args &&...args)
+        CuUtil_CONSTEVAL auto Combine(Args &&...args)
 		{
 			constexpr auto length = (Length<Args>::Value() + ...);
 
@@ -214,7 +220,7 @@ namespace CuUtil
 		}
 
 		template <typename Str, typename... Args>
-		consteval auto Join(Str&& str, Args &&...args)
+		CuUtil_CONSTEVAL auto Join(Str&& str, Args &&...args)
 		{
 			constexpr auto length = (Length<Args>::Value() + ...) + ((sizeof...(Args)) - 1) * Length<Str>::Value();
 
@@ -228,7 +234,7 @@ namespace CuUtil
 		}
 
 		template <size_t N, typename T>
-		consteval auto Repeat(T &&str)
+		CuUtil_CONSTEVAL auto Repeat(T &&str)
 		{
 			constexpr auto length = N * Length<T>::Value();
 
@@ -245,7 +251,7 @@ namespace CuUtil
 		}
 
 		template <typename T, size_t S>
-		consteval auto Reverse(const std::array<T, S> &str)
+		CuUtil_CONSTEVAL auto Reverse(const std::array<T, S> &str)
 		{
 			std::array<T, S> buf{};
 			buf[S - 1] = 0;
@@ -493,7 +499,7 @@ namespace CuUtil
 		namespace Detail
 		{
 			template <typename T, size_t S>
-			consteval size_t GetFilenameOffset(const T (&str)[S])
+			CuUtil_CONSTEVAL size_t GetFilenameOffset(const T (&str)[S])
 			{
 				for (size_t i = S - 1; i > 0; --i)
 				{
@@ -507,7 +513,7 @@ namespace CuUtil
 			}
 
 			template <size_t Offset, typename T, size_t S>
-			consteval auto GetFilenameImpl(const T (&str)[S])
+			CuUtil_CONSTEVAL auto GetFilenameImpl(const T (&str)[S])
 			{
 				std::array<T, S - Offset> buf{};
 				for (size_t i = 0; i < buf.size(); ++i)

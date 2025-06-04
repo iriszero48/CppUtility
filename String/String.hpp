@@ -8,13 +8,56 @@
 #include <vector>
 #include <string_view>
 
-#if defined(__cpp_lib_char8_t)
+#ifdef __cpp_lib_char8_t
 #define __U8stringUseChar8
 #endif
 
 namespace CuStr
 {
     constexpr int Version[]{1, 0, 0, 0};
+
+    class U8String;
+    class U8StringView;
+
+    using U8StringType =
+#ifdef __U8stringUseChar8
+            std::u8string;
+#else
+            U8String;
+#endif
+
+    using U8StringViewType =
+#ifdef __U8stringUseChar8
+            std::u8string_view;
+#else
+            U8StringView;
+#endif
+
+    class U8String : public std::basic_string<char>
+    {
+    public:
+        using std::basic_string<char>::basic_string;
+
+        U8String(const std::string& dirtyU8) : std::basic_string<char>::basic_string(dirtyU8.c_str(), dirtyU8.length())
+        {
+
+        }
+
+        U8String(U8StringView);
+    };
+
+    class U8StringView : public std::basic_string_view<char>
+    {
+    public:
+        using std::basic_string_view<char>::basic_string_view;
+
+        U8StringView(const U8String& str) : std::basic_string_view<char>(str.c_str(), str.length())
+        {
+
+        }
+    };
+
+    U8String::U8String(U8StringView str) : U8String(std::string(str.data(), str.length())) {}
 
     template <typename T>
     struct IsChar : std::integral_constant<bool, std::is_same_v<T, std::string::value_type> || std::is_same_v<
@@ -89,7 +132,19 @@ namespace CuStr
                 if constexpr ((std::is_base_of_v<std::basic_string<typename T::value_type>, T> ||
                                std::is_base_of_v<std::basic_string_view<typename T::value_type>, T>))
                 {
-                    return t;
+                    if constexpr (std::is_same_v<U8String, T> || std::is_same_v<U8StringView, T>)
+                    {
+                        U8StringView sv(t);
+#ifdef __U8stringUseChar8
+                        return std::u8string_view{(const char8_t*)sv.data(), sv.length()};
+#else
+                        return std::filesystem::u8path(std::string_view {sv.data(), sv.length()});
+#endif
+                    }
+                    else
+                    {
+                        return t;
+                    }
                 }
                 else
                 {
@@ -169,10 +224,24 @@ namespace CuStr
         {
             [[nodiscard]] decltype(auto) operator()(const std::filesystem::path &str) const
             {
+#if defined(__clang__) && __clang_major__ < 13
+                const auto u8str = str.u8string();
+                return std::u8string{(const char8_t *)u8str.c_str(), u8str.length()};
+#else
                 return str.u8string();
+#endif
             }
         };
 #endif
+        template <>
+        struct GetStrFunc<U8String>
+        {
+            [[nodiscard]] decltype(auto) operator()(const std::filesystem::path &str) const
+            {
+                const auto u8 = str.u8string();
+                return U8String(std::string_view((const char*)u8.c_str(), u8.length()));
+            }
+        };
         template <>
         struct GetStrFunc<std::u16string>
         {
@@ -215,13 +284,18 @@ namespace CuStr
     macro(src, std::u32string, func##U32)
 #else
 #define __Suit2(macro, func)                               \
-    macro(std::string, func) macro(std::wstring, func##W); \
-    macro(std::u16string, func##U16) macro(std::u32string, func##U32);
+    macro(std::string, func);                              \
+    macro(std::wstring, func##W);                          \
+    macro(std::u16string, func##U16);                      \
+    macro(std::u32string, func##U32);                      \
+    macro(U8String, func##U8)
 
 #define __Suit3(macro, src, func)                                    \
-    macro(src, std::string, func) macro(src, std::wstring, func##W); \
+    macro(src, std::string, func);                                   \
+    macro(src, std::wstring, func##W);                               \
     macro(src, std::u16string, func##U16);                           \
-    macro(src, std::u32string, func##U32);
+    macro(src, std::u32string, func##U32);                           \
+    macro(src, U8String, func##U8);
 #endif
 
 #define __Args1(src, type, func)            \
@@ -405,6 +479,12 @@ namespace CuStr
     }
 
     template <typename T>
+    [[nodiscard]] std::filesystem::path ToPath(const T &t)
+    {
+        return _Detail::ToStringImpl(t);
+    }
+
+    template <typename T>
     [[nodiscard]] std::string ToString(const T &t)
     {
         return ToStringAs<std::string>(t);
@@ -415,13 +495,13 @@ namespace CuStr
     {
         return ToStringAs<std::wstring>(t);
     }
-#ifdef __U8stringUseChar8
+
     template <typename T>
-    [[nodiscard]] std::u8string ToU8String(const T &t)
+    [[nodiscard]] U8StringType ToU8String(const T &t)
     {
-        return ToStringAs<std::u8string>(t);
+        return ToStringAs<U8StringType>(t);
     }
-#endif
+
     template <typename T>
     [[nodiscard]] std::u16string ToU16String(const T &t)
     {
@@ -596,22 +676,21 @@ namespace CuStr
 
     __Suit2(__FromUtf8Impl, FromUtf8);
 
-#ifdef __U8stringUseChar8
-    [[nodiscard]] inline std::u8string_view FromDirtyUtf8String(const std::string_view &str)
+    [[nodiscard]] inline U8StringViewType FromDirtyUtf8String(const std::string_view &str)
     {
-        return {reinterpret_cast<const char8_t *>(str.data()), str.length()};
+        return {reinterpret_cast<const U8StringViewType::value_type *>(str.data()), str.length()};
     }
 
-    [[nodiscard]] inline std::string ToDirtyUtf8String(const std::u8string_view &str)
+    [[nodiscard]] inline std::string ToDirtyUtf8String(const U8StringViewType &str)
     {
         return {reinterpret_cast<const char *>(str.data()), str.length()};
     }
 
-    [[nodiscard]] inline std::string_view ToDirtyUtf8StringView(const std::u8string_view &str)
+    [[nodiscard]] inline std::string_view ToDirtyUtf8StringView(const U8StringViewType &str)
     {
         return {reinterpret_cast<const char *>(str.data()), str.length()};
     }
-#endif
+
 #pragma endregion Utf8
 
 #pragma region Replace

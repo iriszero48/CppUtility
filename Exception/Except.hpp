@@ -19,6 +19,13 @@ namespace CuExcept
 		}
 	};
 
+    using U8Str =
+#ifdef __cpp_char8_t
+            std::u8string;
+#else
+            std::string;
+#endif
+
 #define CuExcept_MakeExceptionName(type, name) \
 	template <>                                \
 	struct CuExcept::GetExceptionName<type>    \
@@ -49,7 +56,7 @@ namespace CuExcept
 		std::any Data{};
 
 	private:
-		std::u8string whatBuff = u8"an Exception";
+        U8Str whatBuff = u8"an Exception";
 
 	public:
 		ExceptionBase(T message, T exceptionName = CuExcept_GetExceptionName(ExceptionBase, ), CuUtil::Source::SourceLocationType source = CuUtil_Source_Current,
@@ -86,13 +93,13 @@ namespace CuExcept
 		void FillWhat()
 		{
 			auto msg = ToString();
-			if constexpr (std::is_same_v<T, std::u8string>)
+			if constexpr (std::is_same_v<T, U8Str>)
 			{
 				whatBuff = std::move(msg);
 			}
 			else
 			{
-				whatBuff = std::filesystem::path(msg).u8string();
+				whatBuff = (const U8Str::value_type *)std::filesystem::path(msg).u8string().c_str();
 			}
 		}
 
@@ -156,7 +163,7 @@ namespace CuExcept
 	};
 
 	using Exception = ExceptionBase<std::string>;
-	using U8Exception = ExceptionBase<std::u8string>;
+	using U8Exception = ExceptionBase<U8Str>;
 }
 
 #define CuExcept_MakeException(ex, baseNamespace, base)                            \
