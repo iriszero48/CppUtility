@@ -2,6 +2,7 @@
 
 #include <array>
 #include <utility>
+#include <algorithm>
 
 #ifdef __cpp_lib_source_location
 #define CU_UTILITY_USE_STD_SOURCE_LOCATION
