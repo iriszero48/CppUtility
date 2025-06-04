@@ -3,6 +3,7 @@
 #include <array>
 #include <utility>
 #include <algorithm>
+#include <cstdint>
 
 #ifdef __cpp_lib_source_location
 #define CU_UTILITY_USE_STD_SOURCE_LOCATION
@@ -46,7 +47,7 @@ namespace CuUtil
 		public:
 			using iterator_category = std::random_access_iterator_tag;
 			using value_type = T;
-			using difference_type = std::int64_t;
+			using difference_type = int64_t;
 			using pointer = const T*;
 			using reference = const T&;
 
@@ -529,7 +530,7 @@ namespace CuUtil
 		struct SourceLocation {
 			constexpr SourceLocation() = default;
 
-			constexpr SourceLocation(const std::uint_least32_t line,
+			constexpr SourceLocation(const uint_least32_t line,
 				const char* const file,
 				const char* const function = "<unknown function>") noexcept : line_(line), file_(file), function_(function) {}
 
@@ -547,7 +548,7 @@ namespace CuUtil
 			}
 
 		private:
-			std::uint_least32_t line_{};
+			uint_least32_t line_{};
 			const char* file_ = "";
 			const char* function_ = "";
 		};
